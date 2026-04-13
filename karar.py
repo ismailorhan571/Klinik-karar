@@ -1,211 +1,180 @@
 import streamlit as st
 
-# 1. Sayfa Ayarları ve Ultra Modern Görünüm (Geri Getirildi ve Geliştirildi)
+# 1. Sayfa Ayarları ve Temiz Klinik Tasarım
 st.set_page_config(page_title="Dahiliye CDSS", page_icon="⚕️", layout="wide")
 
 st.markdown("""
     <style>
-    /* Genel Arka Plan ve Yazı Tipi */
-    .stApp { background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    /* Temiz, Beyaz, Göz Yormayan Klinik Tema */
+    .stApp { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, sans-serif; }
     
-    /* Sekme (Tab) Tasarımı */
-    .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+    /* Sekmelerin (Tabs) Sadeleşmesi */
     .stTabs [data-baseweb="tab"] { 
-        font-size: 15px; font-weight: 700; padding: 12px 20px; 
-        border-radius: 12px 12px 0 0; background-color: #e2e8f0; color: #475569; border: none;
+        font-size: 15px; font-weight: 600; color: #495057; border: 1px solid #dee2e6; border-bottom: none; border-radius: 8px 8px 0 0; background-color: #e9ecef; margin-right: 2px;
     }
-    .stTabs [aria-selected="true"] { background-color: #1e3a8a !important; color: white !important; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); }
+    .stTabs [aria-selected="true"] { background-color: #ffffff !important; color: #0d6efd !important; border-top: 3px solid #0d6efd; }
     
-    /* Kart Tasarımları (Ön Tanı ve Tetkikler İçin) */
-    .diagnose-card {
-        background-color: white; padding: 25px; border-radius: 15px;
-        border-left: 8px solid #dc2626; box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        height: 100%; transition: transform 0.3s ease;
-    }
-    .diagnose-card:hover { transform: translateY(-5px); }
+    /* Kartların Net ve Ciddi Görünümü */
+    .diagnose-card { background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; border-left: 6px solid #dc3545; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .test-card { background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; border-left: 6px solid #198754; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     
-    .test-card {
-        background-color: white; padding: 25px; border-radius: 15px;
-        border-left: 8px solid #059669; box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        height: 100%; transition: transform 0.3s ease;
-    }
-    .test-card:hover { transform: translateY(-5px); }
-    
-    /* Buton Tasarımı */
-    .stButton>button {
-        background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
-        color: white; border: none; border-radius: 12px; height: 3.5em;
-        font-weight: 800; font-size: 16px; width: 100%; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
-    }
-    .stButton>button:hover { box-shadow: 0 8px 25px rgba(59,130,246,0.5); transform: translateY(-2px); }
-    
-    /* Başlık */
-    h1 { color: #1e3a8a; text-align: center; font-weight: 900; }
+    /* Butonun Profesyonel Hali */
+    .stButton>button { background-color: #0d6efd; color: white; border-radius: 6px; font-weight: bold; height: 3em; width: 100%; border: none; font-size: 16px; }
+    .stButton>button:hover { background-color: #0b5ed7; }
     </style>
     """, unsafe_allow_html=True)
 
 # 2. Üst Bilgi
 st.title("⚕️ Dahiliye Klinik Karar Destek Asistanı")
-st.markdown("<p style='text-align: center; font-size: 1.3em; color: #475569;'><b>Sürüm: 8.0 (Geliştirici: İSMAİL ORHAN)</b></p>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center; color: #6c757d;'>Sürüm: 9.0 (Geliştirici: İSMAİL ORHAN)</h4>", unsafe_allow_html=True)
 st.divider()
 
-# 3. Sidebar: Vital Bulgular (Diyabet ve Detaylı Vitaller)
+# 3. Sidebar: Vital Bulgular
 with st.sidebar:
-    st.header("📋 Hasta Vitalleri")
+    st.header("📋 Vitaller & Profil")
     yas = st.number_input("Yaş", 0, 120, 45)
     cinsiyet = st.selectbox("Cinsiyet", ["Erkek", "Kadın"])
     st.divider()
     ates = st.slider("Ateş (°C)", 34.0, 42.0, 36.6, 0.1)
     ta_sis = st.number_input("Sistolik TA (mmHg)", 50, 250, 120)
     ta_dia = st.number_input("Diastolik TA (mmHg)", 30, 150, 80)
-    nabiz = st.number_input("Nabız (atım/dk)", 30, 250, 80)
+    nabiz = st.number_input("Nabız (/dk)", 30, 250, 80)
     spo2 = st.slider("SpO2 (%)", 40, 100, 98)
-    kan_sekeri = st.number_input("Açlık/Anlık Kan Şekeri (mg/dL)", 20, 1000, 100)
+    kan_sekeri = st.number_input("Kan Şekeri (mg/dL)", 20, 1000, 100)
     
-    if kan_sekeri > 250: st.error("🚨 Kritik Hiperglisemi!")
-    elif kan_sekeri < 60: st.error("🚨 Kritik Hipoglisemi!")
-    if ta_sis > 180 or ta_dia > 120: st.error("🚨 Hipertansif Acil Şüphesi!")
-    if spo2 < 90: st.warning("⚠️ Hipoksi!")
+    # Otomatik Uyarılar
+    if kan_sekeri > 250: st.error("🚨 Hiperglisemi!")
+    elif kan_sekeri < 60: st.error("🚨 Hipoglisemi!")
+    if ta_sis > 180 or ta_dia > 120: st.error("🚨 Hipertansif Acil!")
 
-# 4. Devasa Semptom Paneli (Kitaplık Gibi Genişletildi)
-st.subheader("🔍 Kapsamlı Klinik Bulgular (Dahiliye Tüm Branşlar)")
-t_gis, t_kardiyo, t_noroloji, t_romatoloji, t_endokrin, t_enfeksiyon = st.tabs([
-    "🩺 GİS & Hepatobilier", "🫁 Kardiyoloji & Göğüs", "🧠 Nöroloji", "🦋 Romatoloji", "🧪 Endokrin & Nefroloji", "🧬 Hematoloji & Enfeksiyon"
+# 4. Devasa Semptom Paneli (Sınırlar Zorlandı)
+st.subheader("🔍 Klinik Bulgular (Genişletilmiş Veritabanı)")
+t_gis, t_kardiyo, t_noroloji, t_romatoloji, t_endokrin, t_hemato = st.tabs([
+    "🩺 GİS", "🫁 Kardiyo & Solunum", "🧠 Nöro & Toksik", "🦋 Romatoloji", "🧪 Endokrin & Nefro", "🧬 Hemato & Onko"
 ])
 
 secilen = []
 with t_gis:
     c1, c2, c3 = st.columns(3)
-    with c1: secilen.extend(st.multiselect("Üst GİS", ["Hematemez", "Melena", "Disfaji", "Epigastrik Ağrı", "Pirozis (Mide Yanması)", "İnatçı Hıçkırık", "Erken Doyma"]))
-    with c2: secilen.extend(st.multiselect("Alt GİS", ["Sağ Alt Kadran Ağrısı", "Hematokezya", "Tenezm", "Steatore (Yağlı Dışkı)", "Sol Alt Kadran Ağrısı", "Kupür/Rebound"]))
-    with c3: secilen.extend(st.multiselect("Hepatobilier", ["Sarılık", "Asit", "Biliyer Kolik Ağrısı", "Akoli (Renksiz Dışkı)", "Safra Kusma", "Hepatomegali"]))
+    with c1: secilen.extend(st.multiselect("Üst GİS", ["Hematemez", "Melena", "Disfaji", "Odinofaji (Yutma Ağrısı)", "Epigastrik Ağrı", "Pirozis", "Erken Doyma"]))
+    with c2: secilen.extend(st.multiselect("Alt GİS", ["Sağ Alt Kadran Ağrısı", "Sol Alt Kadran Ağrısı", "Hematokezya", "Tenezm", "Steatore", "Kupür/Rebound"]))
+    with c3: secilen.extend(st.multiselect("Hepatobilier", ["Sarılık", "Asit", "Biliyer Kolik", "Akoli (Renksiz Dışkı)", "Safra Kusma", "Hepatomegali"]))
 
 with t_kardiyo:
     c4, c5 = st.columns(2)
-    with c4: secilen.extend(st.multiselect("Kardiyovasküler", ["Baskı Tarzı Göğüs Ağrısı", "Çarpıntı", "Senkop", "PND (Gece Nefes Darlığı)", "Kardiyak Üfürüm", "S3/S4 Galo Ritmi", "Pulsus Paradoksus", "Boyun Ven Dolgunluğu"]))
-    with c5: secilen.extend(st.multiselect("Pulmoner", ["Efor Dispnesi", "Hemoptizi", "Plevritik Ağrı", "Wheezing (Hışıltı)", "Stridor", "Çomak Parmak", "Prodüktif Öksürük", "Siyanoz"]))
+    with c4: secilen.extend(st.multiselect("Kardiyovasküler", ["Göğüs Ağrısı (Baskı)", "Çarpıntı", "Senkop", "Tek Taraflı Bacak Şişliği", "Kladikasyo (Yürürken Bacak Ağrısı)", "PND/Ortopne", "Boyun Ven Dolgunluğu"]))
+    with c5: secilen.extend(st.multiselect("Pulmoner", ["Efor Dispnesi", "Hemoptizi", "Plevritik Ağrı", "Wheezing (Hışıltı)", "Stridor", "Çomak Parmak", "Prodüktif Öksürük"]))
 
 with t_noroloji:
     c6, c7 = st.columns(2)
-    with c6: secilen.extend(st.multiselect("Santral", ["Ani ve Çok Şiddetli Baş Ağrısı", "Konfüzyon/Deliryum", "Ense Sertliği", "Fokal Güç Kaybı", "Afazi (Konuşma Bozukluğu)"]))
-    with c7: secilen.extend(st.multiselect("Kranial & Periferik", ["Fasiyal Asimetri (Yüz Kayması)", "Dizartri", "Diplopi (Çift Görme)", "Nistagmus", "Ataksi", "Eldiven-Çorap Tarzı Uyuşma"]))
+    with c6: secilen.extend(st.multiselect("Santral & Periferik", ["Ani Şiddetli Baş Ağrısı", "Konfüzyon", "Ense Sertliği", "Fasiyal Asimetri", "Fokal Güç Kaybı", "Dizartri", "Eldiven-Çorap Uyuşma", "Tremor"]))
+    with c7: secilen.extend(st.multiselect("Göz & Toksikoloji", ["Miyozis (İğne Ucu Pupil)", "Midriyazis", "Diplopi", "Nistagmus", "Tükürük Artışı (Hipersalivasyon)"]))
 
 with t_romatoloji:
     c8, c9 = st.columns(2)
-    with c8: secilen.extend(st.multiselect("Artrit & Bağ Doku", ["Sabah Sertliği (>1 Saat)", "Poliartrit (Simetrik)", "Monoartrit (Akut Şişlik)", "Kelebek Döküntü", "Raynaud Fenomeni"]))
-    with c9: secilen.extend(st.multiselect("Özel Romatolojik Bulgular", ["Helitrop Raş / Gottron Papülleri", "Bambu Kamışı Omurga (Sertlik)", "Oral/Genital Aft", "Kuru Göz / Kuru Ağız (Sikca)", "Eritema Nodosum"]))
+    with c8: secilen.extend(st.multiselect("Eklem & Deri", ["Sabah Sertliği (>1 Saat)", "Poliartrit (Simetrik)", "Monoartrit (Akut Şişlik)", "Kelebek Döküntü", "Raynaud Fenomeni"]))
+    with c9: secilen.extend(st.multiselect("Sistemik & Özel", ["Oral Aft", "Genital Ülser", "Üveit (Göz Kızarıklığı)", "Gottron Papülleri", "Bambu Omurga", "Kuru Göz/Ağız"]))
 
 with t_endokrin:
     c10, c11 = st.columns(2)
-    with c10: secilen.extend(st.multiselect("Endokrinoloji", ["Poliüri/Polidipsi", "Aseton Kokusu", "Aydede Yüzü / Buffalo Hörgücü", "Mor Stria", "Mukozal Hiperpigmentasyon", "Makroglosi", "Ekzoftalmi", "Sıcak/Soğuk İntoleransı"]))
-    with c11: secilen.extend(st.multiselect("Nefroloji", ["Oligüri / Anüri", "Hematüri (Makroskopik)", "Köpüklü İdrar (Proteinüri)", "Kostavertebral Açı Hassasiyeti", "Flank Ağrısı (Böğür)", "Pretibial Ödem"]))
+    with c10: secilen.extend(st.multiselect("Endokrin", ["Poliüri/Polidipsi", "Aseton Kokusu", "Aydede Yüzü", "Mor Stria", "Mukozal Hiperpigmentasyon", "Ekzoftalmi", "Galaktore", "Hirsutizm"]))
+    with c11: secilen.extend(st.multiselect("Nefroloji", ["Oligüri", "Dizüri/Pollaküri", "Hematüri (Makroskopik)", "Köpüklü İdrar", "Flank Ağrısı (Böğür)", "Üremik Koku"]))
 
-with t_enfeksiyon:
+with t_hemato:
     c12, c13 = st.columns(2)
-    with c12: secilen.extend(st.multiselect("Enfeksiyon & Sistemik", ["Gece Terlemesi (Sırılsıklam)", "İstemsiz Kilo Kaybı", "Pel-Ebstein Ateşi", "Jeneralize Lenfadenopati"]))
-    with c13: secilen.extend(st.multiselect("Hematoloji", ["Peteşi / Ekimoz / Purpura", "Splenomegali", "Sürekli Enfeksiyon (Nötropeni)", "Pika (Toprak Yeme İsteği)", "Koilonişi (Kaşık Tırnak)"]))
+    with c12: secilen.extend(st.multiselect("Hematoloji", ["Solukluk/Derin Anemi", "Pika (Toprak Yeme İsteği)", "Diş Eti Kanaması", "Peteşi/Purpura", "Lenfadenopati", "Splenomegali"]))
+    with c13: secilen.extend(st.multiselect("Onkoloji & Genel", ["Yaygın Kemik Ağrısı", "İstemsiz Kilo Kaybı", "Gece Terlemesi (Sırılsıklam)", "Pel-Ebstein Ateşi"]))
 
-# 5. DEVASA İÇ MOTOR (Algoritma)
-def tam_kapsamli_motor(bulgular, vitaller):
-    t_list, tet_list = set(), set(["Tam Kan Sayımı (Hemogram)", "Biyokimya (AST, ALT, BUN, Cre, Na, K)", "CRP"])
-    b = set(bulgular)
-    ates, ta_sis, spo2, seker = vitaller
+# 5. DEV TIBBİ ALGORİTMA MOTORU
+def dev_klinik_motor(b_list, vitaller):
+    t_set, tet_set = set(), set(["Hemogram", "Geniş Biyokimya (AST, ALT, BUN, Cre, Na, K, Ca)", "CRP", "TİT"])
+    b = set(b_list)
+    ates, ta_sis, spo2, seker, yas = vitaller
 
-    # --- ENDOKRİNOLOJİ ---
+    # --- ENDOKRİN & TOKSİKOLOJİ ---
     if seker > 250 and "Aseton Kokusu" in b:
-        t_list.add("Diyabetik Ketoasidoz (DKA)")
-        tet_list.update(["Arteriyel/Venöz Kan Gazı", "İdrarda Keton", "Serum Osmolalitesi"])
-    if "Mor Stria" in b or "Aydede Yüzü / Buffalo Hörgücü" in b:
-        t_list.add("Cushing Sendromu")
-        tet_list.update(["1 mg Deksametazon Süpresyon Testi", "24 Saatlik İdrarda Serbest Kortizol", "ACTH Düzeyi"])
+        t_set.add("Diyabetik Ketoasidoz (DKA)")
+        tet_set.update(["Arteriyel Kan Gazı", "İdrar/Kan Ketonu"])
     if "Mukozal Hiperpigmentasyon" in b:
-        t_list.add("Addison Hastalığı (Primer Adrenal Yetmezlik)")
-        tet_list.update(["Sabah Kortizolü", "ACTH Stimülasyon Testi"])
-    if "Ekzoftalmi" in b and "Sıcak/Soğuk İntoleransı" in b:
-        t_list.add("Hipertiroidi / Graves Hastalığı")
-        tet_list.update(["TSH, sT3, sT4", "TSH Reseptör Antikoru (TRAb)", "Tiroid USG"])
+        t_set.add("Addison Hastalığı")
+        tet_set.update(["Sabah Kortizolü", "ACTH"])
+    if "Miyozis (İğne Ucu Pupil)" in b and "Tükürük Artışı (Hipersalivasyon)" in b:
+        t_set.add("Kolinerjik Sendrom / Organofosfat Zehirlenmesi")
+        tet_set.update(["Kolinesteraz Düzeyi", "Acil Toksikoloji Konsültasyonu", "EKG"])
 
-    # --- KARDİYOLOJİ & GÖĞÜS ---
+    # --- HEMATOLOJİ & ONKOLOJİ (YENİ) ---
+    if "Pika (Toprak Yeme İsteği)" in b and "Solukluk/Derin Anemi" in b:
+        t_set.add("Derin Demir Eksikliği Anemisi")
+        tet_set.update(["Ferritin, Demir, TİBK", "GİS Endoskopisi/Kolonoskopi (Etyoloji için)"])
+    if "Yaygın Kemik Ağrısı" in b and yas > 50:
+        t_set.add("Multipl Myelom Şüphesi")
+        tet_set.update(["Serum Protein Elektroforezi", "24 Saatlik İdrarda Bence-Jones", "Kalsiyum"])
+    if "Diş Eti Kanaması" in b and "Peteşi/Purpura" in b:
+        t_set.add("Trombositopeni / Akut Lösemi Şüphesi")
+        tet_set.update(["Periferik Yayma", "PT/aPTT", "Kemik İliği Biyopsisi (Gerekirse)"])
+
+    # --- KARDİYO & NEFRO (YENİ) ---
+    if "Tek Taraflı Bacak Şişliği" in b:
+        t_set.add("Derin Ven Trombozu (DVT)")
+        tet_set.update(["Alt Ekstremite Venöz Doppler USG", "D-Dimer"])
+    if "Üremik Koku" in b and "Oligüri" in b:
+        t_set.add("Akut Böbrek Hasarı (ABH) / Üremi")
+        tet_set.update(["Venöz Kan Gazı (Asidoz/K için)", "Renal USG", "Spot İdrar Na"])
+    if "Kladikasyo (Yürürken Bacak Ağrısı)" in b:
+        t_set.add("Periferik Arter Hastalığı (PAH)")
+        tet_set.update(["Ayak Bileği-Kol İndeksi (ABI)", "Arteriyel Doppler USG"])
+
+    # --- ROMATOLOJİ (GELİŞMİŞ) ---
+    if "Oral Aft" in b and "Genital Ülser" in b and "Üveit (Göz Kızarıklığı)" in b:
+        t_set.add("Behçet Hastalığı")
+        tet_set.update(["Paterji Testi", "Göz Dibi Muayenesi", "HLA-B51"])
+    if "Monoartrit (Akut Şişlik)" in b:
+        t_set.add("Akut Gut Artriti / Septik Artrit")
+        tet_set.update(["Serum Ürik Asit", "Eklem Sıvısı Analizi (Hücre ve Kristal)"])
+
+    # --- GİS & NÖRO (KLASİKLER KORUNDU) ---
     if "Baskı Tarzı Göğüs Ağrısı" in b:
-        t_list.add("Akut Koroner Sendrom (STEMI / NSTEMI)")
-        tet_list.update(["12 Derivasyonlu EKG", "Seri Troponin I/T", "Ekokardiyografi"])
-    if "Efor Dispnesi" in b and ("PND (Gece Nefes Darlığı)" in b or "S3/S4 Galo Ritmi" in b):
-        t_list.add("Kalp Yetmezliği (KKY)")
-        tet_list.update(["NT-proBNP", "Telekardiyogram", "Ekokardiyografi"])
-    if "Plevritik Ağrı" in b and "Hemoptizi" in b and spo2 < 94:
-        t_list.add("Pulmoner Emboli")
-        tet_list.update(["D-Dimer", "Toraks BT Anjiografi (CTPA)", "Venöz Doppler USG"])
-    
-    # --- GİS & HEPATOBİLİER ---
-    if "Biliyer Kolik Ağrısı" in b and "Sarılık" in b and ates > 38.0:
-        t_list.add("Akut Kolanjit (Charcot Triadı)")
-        tet_list.update(["Tüm Batın USG", "Bilirubin (Direkt/Total)", "ERCP / MRCP"])
-    if "Hematemez" in b or "Melena" in b:
-        t_list.add("Üst GİS Kanama (Ülser veya Varis)")
-        tet_list.update(["Acil Üst GİS Endoskopisi", "Kan Grubu ve Cross-Match", "INR/PTT"])
-    if "Sol Alt Kadran Ağrısı" in b and ates > 37.5:
-        t_list.add("Akut Divertikülit")
-        tet_list.update(["Kontrastlı Batın BT"])
+        t_set.add("Akut Koroner Sendrom")
+        tet_set.update(["Seri EKG", "Troponin I/T"])
+    if "Fasiyal Asimetri" in b and "Fokal Güç Kaybı" in b:
+        t_set.add("Akut İskemik İnme / SVO")
+        tet_set.update(["Acil Kontrastsız Beyin BT", "Difüzyon MR"])
+    if "Ani Şiddetli Baş Ağrısı" in b and "Ense Sertliği" in b:
+        t_set.add("Subaraknoid Kanama (SAK) / Menenjit")
+        tet_set.update(["Beyin BT", "BOS Analizi (LP)"])
+    if "Sağ Alt Kadran Ağrısı" in b and "Kupür/Rebound" in b:
+        t_set.add("Akut Apandisit")
+        tet_set.update(["Batın BT"])
 
-    # --- ROMATOLOJİ ---
-    if "Kelebek Döküntü" in b:
-        t_list.add("Sistemik Lupus Eritematozus (SLE)")
-        tet_list.update(["ANA, Anti-dsDNA, Anti-Sm", "Kompleman (C3, C4)", "Tam İdrar Tetkiki (Lupus Nefriti İçin)"])
-    if "Helitrop Raş / Gottron Papülleri" in b:
-        t_list.add("Dermatomiyozit")
-        tet_list.update(["Kreatin Kinaz (CK)", "LDH", "Kas Biyopsisi", "EMG"])
-    if "Bambu Kamışı Omurga (Sertlik)" in b:
-        t_list.add("Ankilozan Spondilit")
-        tet_list.update(["HLA-B27", "Sakroiliak Eklem MR", "AP Pelvis Grafisi"])
+    return sorted(list(t_set)), sorted(list(tet_set))
 
-    # --- NÖROLOJİ ---
-    if "Fasiyal Asimetri (Yüz Kayması)" in b and ("Fokal Güç Kaybı" in b or "Afazi (Konuşma Bozukluğu)" in b):
-        t_list.add("Akut İskemik İnme / SVO")
-        tet_list.update(["Acil Kontrastsız Beyin BT", "Difüzyon MR", "Karotis Doppler USG"])
-    if "Ani ve Çok Şiddetli Baş Ağrısı" in b and "Ense Sertliği" in b:
-        t_list.add("Subaraknoid Kanama (SAK) veya Menenjit")
-        tet_list.update(["Beyin BT", "Lomber Ponksiyon (BOS Analizi)"])
-
-    # --- NEFROLOJİ & HEMATOLOJİ ---
-    if "Köpüklü İdrar (Proteinüri)" in b and "Pretibial Ödem" in b:
-        t_list.add("Nefrotik Sendrom")
-        tet_list.update(["24 Saatlik İdrarda Protein", "Serum Albümin", "Lipid Profili"])
-    if "Kostavertebral Açı Hassasiyeti" in b and ates > 38.0:
-        t_list.add("Akut Piyelonefrit")
-        tet_list.update(["Tam İdrar Tetkiki", "İdrar Kültürü", "Üriner Sistem USG"])
-    if "Peteşi / Ekimoz / Purpura" in b:
-        t_list.add("Trombositopeni / Kanama Diatezi / Lösemi Şüphesi")
-        tet_list.update(["Periferik Yayma (Formül Lökosit)", "PT/aPTT/INR", "Kemik İliği Biyopsisi Düşün"])
-
-    return sorted(list(t_list)), sorted(list(tet_list))
-
-# 6. Analiz Tetikleme ve Modern Rapor
+# 6. Analiz Tetikleme
 st.markdown("<br>", unsafe_allow_html=True)
-if st.button("TIBBİ ALGORİTMAYI ÇALIŞTIR VE RAPORLA"):
+if st.button("TIBBİ ALGORİTMAYI ÇALIŞTIR"):
     if not secilen and kan_sekeri == 100 and ates == 36.6 and ta_sis == 120:
-        st.warning("⚠️ Lütfen en az bir klinik bulgu seçiniz veya vitalleri anormal değerlere ayarlayınız.")
+        st.warning("⚠️ Lütfen semptom seçiniz veya vitalleri anormal değerlere getiriniz.")
     else:
-        vitaller = (ates, ta_sis, spo2, kan_sekeri)
-        tanilar, tetkikler = tam_kapsamli_motor(secilen, vitaller)
+        vitaller = (ates, ta_sis, spo2, kan_sekeri, yas)
+        tanilar, tetkikler = dev_klinik_motor(secilen, vitaller)
         
-        st.markdown("### 🏥 Kapsamlı Klinik Karar Raporu")
+        st.markdown("### 🏥 Klinik Karar Raporu")
         r1, r2 = st.columns(2)
         
         with r1:
             st.markdown("<div class='diagnose-card'>", unsafe_allow_html=True)
-            st.subheader("📋 Diferansiyel Tanılar (Düşünülmesi Gerekenler)")
+            st.subheader("📋 Diferansiyel Tanılar")
             if tanilar:
                 for t in tanilar: st.markdown(f"**🚨 {t}**")
             else: 
-                st.info("💡 Seçilen bulgular spesifik bir sendroma işaret etmedi. Rutin dahiliye poliklinik değerlendirmesi önerilir.")
+                st.info("Rutin muayene bulguları. İleri anamnez önerilir.")
             st.markdown("</div>", unsafe_allow_html=True)
             
         with r2:
             st.markdown("<div class='test-card'>", unsafe_allow_html=True)
-            st.subheader("🧪 İstenmesi Gereken Klinik Tetkikler")
+            st.subheader("🧪 İstenmesi Gereken Tetkikler")
             for tet in tetkikler: st.markdown(f"**🔬 {tet}**")
             st.markdown("</div>", unsafe_allow_html=True)
 
 # 7. Alt Bilgi
 st.markdown("---")
-st.caption("Dahiliye Klinik Karar Destek Sistemi © 2026 | Tasarım ve Geliştirme: İSMAİL ORHAN | Sadece Profesyonel Tıbbi Kullanım İçindir.")
+st.caption("Dahiliye CDSS © 2026 | Tasarım ve Geliştirme: İSMAİL ORHAN | Profesyonel Tıbbi Kullanım İçindir.")
