@@ -5,15 +5,15 @@ import google.generativeai as genai
 # 1. Sayfa Ayarları
 st.set_page_config(page_title="Klinik Karar Destek Sistemi", page_icon="⚕️", layout="wide")
 
-# Gemini API Yapılandırması (404 Hatası Çözüldü)
+# Gemini API Yapılandırması (404 Hatasını Çözen Yeni Yapı)
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # Hata çözümü: 'models/' ön eki eklendi
+    # HATA ÇÖZÜMÜ: Bazı sistemlerde 'models/' eki şarttır.
     model = genai.GenerativeModel('models/gemini-1.5-flash')
 else:
     st.warning("⚠️ API Anahtarı eksik! Streamlit Secrets kısmına GEMINI_API_KEY ekleyin.")
 
-# CSS: Tıbbi Tema
+# CSS: Senin profesyonel tıbbi teman
 st.markdown("""
     <style>
     .main { background-color: #F8F9FA; color: #212529; }
@@ -32,11 +32,11 @@ with col1:
     st.markdown("<h1 style='text-align: center; font-size: 50px; border: none;'>⚕️</h1>", unsafe_allow_html=True)
 with col2:
     st.title("Gelişmiş Klinik Karar Destek Sistemi (CDSS)")
-    st.markdown("**Geliştirici:** İsmail Orhan | **Sürüm:** 1.3 (Stabil & Genişletilmiş)")
+    st.markdown("**Geliştirici:** İsmail Orhan | **Sürüm:** 1.4 (Maksimum Zenginlik)")
 
 st.divider()
 
-# 3. Sol Menü
+# 3. Sol Menü (Hasta Profili & Vitaller)
 with st.sidebar:
     st.header("📋 Hasta Profili")
     yas = st.number_input("Yaş", min_value=0, max_value=120, value=45)
@@ -50,101 +50,113 @@ with st.sidebar:
     spo2 = st.slider("SpO2 (%)", 50, 100, 98)
     
     st.markdown("---")
-    st.info("💡 **Not:** Bu sistem tanı koymaz, hekime rehberlik eder.")
+    st.info("💡 **Bilgi:** CDSS, hekimin klinik yargısını desteklemek için tasarlanmıştır.")
 
-# 4. Semptom Seçimi (Ekstra belirtiler eklendi)
+# 4. Semptom Seçimi (Daha Zengin İçerik)
 st.subheader("🔍 Klinik Semptom Seçimi")
-tabs = st.tabs(["Sistemik", "Kardiyo", "Solunum", "Gastro", "Nöro", "Üriner/Endokrin"])
+tabs = st.tabs(["Genel/Sistemik", "Kardiyovasküler", "Solunum", "Gastrointestinal", "Nörolojik", "Üriner/Endokrin"])
 
 secilen_belirtiler = []
 
 with tabs[0]:
-    sistemik = st.multiselect("Sistemik", ["Yüksek Ateş", "Halsizlik/Yorgunluk", "Gece Terlemesi", "İstemsiz Kilo Kaybı", "Miyalji", "Atralji", "Titreme", "İştahsızlık", "Lenfadenopati"])
+    sistemik = st.multiselect("Sistemik", ["Yüksek Ateş", "Halsizlik/Yorgunluk", "Gece Terlemesi", "İstemsiz Kilo Kaybı", "Yaygın Miyalji", "Artralji", "Titreme", "İştahsızlık", "Lenfadenopati (LAP)", "Kaşıntı"])
     secilen_belirtiler.extend(sistemik)
 with tabs[1]:
-    kardiyo = st.multiselect("Kardiyovasküler", ["Göğüs Ağrısı (Baskı)", "Göğüs Ağrısı (Batıcı)", "Çarpıntı", "Senkop", "Ödem", "Efor Dispnesi", "Ortopne", "Juguler Venöz Dolgunluk"])
+    kardiyo = st.multiselect("Kardiyovasküler", ["Göğüs Ağrısı (Baskı)", "Göğüs Ağrısı (Batıcı)", "Çarpıntı", "Senkop", "Periferik Ödem", "Efor Dispnesi", "Ortopne", "PND", "Asit"])
     secilen_belirtiler.extend(kardiyo)
 with tabs[2]:
-    solunum = st.multiselect("Solunum", ["Nefes Darlığı", "Kuru Öksürük", "Balgamlı Öksürük", "Hemoptizi", "Wheezing", "Plöretik Ağrı", "Siyanoz"])
+    solunum = st.multiselect("Solunum", ["Dispne", "Kuru Öksürük", "Balgamlı Öksürük", "Hemoptizi", "Hışıltılı Solunum", "Plöretik Ağrı", "Siyanoz", "Ses Kısıklığı"])
     secilen_belirtiler.extend(solunum)
 with tabs[3]:
-    gastro = st.multiselect("Gastrointestinal", ["Karın Ağrısı (Yaygın)", "Karın Ağrısı (Sağ Alt)", "Epigastrik Ağrı", "Bulantı", "Kusma", "Diyare", "Melena", "Hematemez", "Sarılık", "Asit"])
+    gastro = st.multiselect("Gastrointestinal", ["Karın Ağrısı (Yaygın)", "Karın Ağrısı (Sağ Alt)", "Karın Ağrısı (Sol Alt)", "Epigastrik Ağrı", "Bulantı", "Kusma", "Diyare", "Melena", "Hematemez", "Sarılık", "Disfaji"])
     secilen_belirtiler.extend(gastro)
 with tabs[4]:
-    noro = st.multiselect("Nörolojik", ["Baş Ağrısı", "Vertigo", "Konfüzyon", "Güç Kaybı", "Dizartri", "Nöbet", "Ense Sertliği", "Ataksi"])
+    noro = st.multiselect("Nörolojik", ["Baş Ağrısı", "Vertigo", "Konfüzyon", "Fokal Güç Kaybı", "Dizartri/Afazi", "Nöbet", "Ense Sertliği", "Ataksi", "Fotofobi"])
     secilen_belirtiler.extend(noro)
 with tabs[5]:
-    uriner = st.multiselect("Üriner/Endokrin", ["Dizüri", "Hematüri", "Pollaküri", "Poliüri", "Oligüri", "Flank Ağrı", "Polidipsi (Çok Su İçme)", "Aseton Kokusu"])
+    uriner = st.multiselect("Üriner/Endokrin", ["Dizüri", "Hematüri", "Pollaküri", "Poliüri", "Oligüri/Anüri", "Flank Ağrı", "Polidipsi", "Aseton Kokusu", "Hiperglisemi Bulguları"])
     secilen_belirtiler.extend(uriner)
 
-# 5. Genişletilmiş Karar Algoritması
+# 5. Karar Algoritması (Zenginleştirilmiş Versiyon)
 def gelismis_analiz(belirtiler, yas, ates, ta_sistolik, spo2):
     rapor = {"teshisler": [], "kan": [], "goruntuleme": [], "kirmizi": ""}
     b_seti = set(belirtiler)
 
-    # Kardiyak & Pulmoner Aciller
-    if {"Göğüs Ağrısı (Baskı)", "Nefes Darlığı"}.intersection(b_seti):
-        rapor["teshisler"].extend(["Akut Miyokard Enfarktüsü", "Pulmoner Emboli", "Pnömotoraks"])
-        rapor["kan"].extend(["Troponin", "CK-MB", "D-Dimer", "Arter Kan Gazı"])
-        rapor["goruntuleme"].extend(["EKG (Acil)", "Ekokardiyografi", "PA AC Grafisi"])
-        rapor["kirmizi"] = "Acil Kardiyak/Pulmoner değerlendirme gereklidir!"
+    # Kardiyak & Torasik Aciller
+    if {"Göğüs Ağrısı (Baskı)", "Dispne", "Ortopne"}.intersection(b_seti):
+        rapor["teshisler"].extend(["AKS (MI Şüphesi)", "Kalp Yetmezliği", "Pulmoner Emboli"])
+        rapor["kan"].extend(["Troponin", "CK-MB", "D-Dimer", "NT-proBNP"])
+        rapor["goruntuleme"].extend(["EKG (Acil)", "EKO", "PAAC Grafisi"])
+        rapor["kirmizi"] = "Kardiyak acil! EKG ve Vital takibi kritik."
 
-    # Gastrointestinal & Cerrahi Aciller
-    if {"Karın Ağrısı (Sağ Alt)", "Karın Ağrısı (Yaygın)", "Melena"}.intersection(b_seti):
-        rapor["teshisler"].extend(["Akut Apandisit", "GİS Kanaması", "İleus"])
-        rapor["kan"].extend(["Hemogram", "CRP", "Laktat", "Koagülasyon Paneli"])
-        rapor["goruntuleme"].extend(["Tüm Batın USG", "Batın BT", "ADBG"])
-        if "Melena" in b_seti: rapor["kirmizi"] = "Aktif GİS Kanaması Şüphesi!"
+    # Akut Batın & GİS
+    if {"Karın Ağrısı (Sağ Alt)", "Melena", "Hematemez"}.intersection(b_seti):
+        rapor["teshisler"].extend(["Akut Apandisit", "Üst/Alt GİS Kanama", "Perforasyon"])
+        rapor["kan"].extend(["Hemogram", "CRP", "INR/PTT", "Laktat"])
+        rapor["goruntuleme"].extend(["Tüm Batın USG", "ADBG", "Batın BT"])
+        if "Melena" in b_seti: rapor["kirmizi"] = "Aktif Kanama Şüphesi! Damar yolu ve sıvı desteği."
 
-    # Endokrin & Renal (Yeni Eklendi)
-    if {"Poliüri", "Polidipsi", "Aseton Kokusu", "Konfüzyon"}.intersection(b_seti):
-        rapor["teshisler"].append("Diyabetik Ketoasidoz (DKA)")
-        rapor["kan"].extend(["Kan Şekeri", "Keton", "HbA1c", "VİS Elektrolitler"])
-    
-    if "Oligüri" in b_seti or "Flank Ağrı" in b_seti:
-        rapor["teshisler"].append("Akut Böbrek Hasarı / Nefrolitiazis")
-        rapor["kan"].extend(["Üre, Kreatinin", "Tam İdrar Tetkiki (TİT)"])
-        rapor["goruntuleme"].append("Uriner Sistem USG")
+    # Nefroloji & Endokrin (Zenginleştirme)
+    if {"Oligüri/Anüri", "Flank Ağrı", "Hematüri"}.intersection(b_seti):
+        rapor["teshisler"].append("Akut Böbrek Hasarı (ABH) / Üreter Taşı")
+        rapor["kan"].extend(["Üre, Kreatinin", "Elektrolit Paneli", "TİT"])
+        rapor["goruntuleme"].append("Üriner USG / Kontrastsız Batın BT")
 
-    # Temel raporlama
+    if {"Poliüri", "Polidipsi", "Aseton Kokusu"}.intersection(b_seti):
+        rapor["teshisler"].append("Diyabetik Ketoasidoz (DKA) / Hiperglisemik Durum")
+        rapor["kan"].extend(["Kan Şekeri", "Venöz Kan Gazı", "İdrar Ketonu"])
+
+    # Enfeksiyon & Sepsis
+    if (ates > 38.3 or ates < 36.0) and ta_sistolik < 100:
+        rapor["teshisler"].append("Sepsis / Septik Şok?")
+        rapor["kan"].extend(["Kan Kültürü", "Prokalsitonin", "Laktat"])
+
+    # Boş kalmasın
     if not rapor["teshisler"]:
-        rapor["teshisler"].append("Spesifik sendrom eşleşmedi (Viral/Enfeksiyöz?)")
-        rapor["kan"].extend(["Hemogram", "CRP", "Biyokimya"])
-        
+        rapor["teshisler"].append("Genel Dahili Değerlendirme Gereklidir")
+        rapor["kan"].extend(["Hemogram", "Biyokimya"])
+
     return rapor
 
-def gemini_analiz_et(yas, cinsiyet, vitals, belirtiler):
-    prompt = f"Hasta: {yas}y, {cinsiyet}. Vitals: {vitals}. Semptomlar: {', '.join(belirtiler)}. Profesyonel tıbbi analiz ve tetkik önerileri yap."
+# Gemini Fonksiyonu
+def ai_analizi_yap(yas, cinsiyet, vitals, belirtiler):
+    prompt = f"""
+    Sen bir Klinik Karar Destek asistanısın.
+    Hasta: {yas} yaşında, {cinsiyet}.
+    Vitaller: {vitals}.
+    Semptomlar: {', '.join(belirtiler)}.
+    
+    Lütfen:
+    1. En olası 3 Diferansiyel Tanı,
+    2. İleri Laboratuvar ve Görüntüleme önerileri,
+    3. Tedaviye yönelik kısa klinik notlar yaz.
+    """
     try:
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"Gemini Hatası (404/Bağlantı): {str(e)}"
+        return f"Gemini Bağlantı Hatası: {str(e)}"
 
-# 6. Sonuç Ekranı
-if st.button("ANALİZİ BAŞLAT"):
+# 6. Analiz Ekranı
+if st.button("KLİNİK ANALİZİ BAŞLAT"):
     if not secilen_belirtiler:
-        st.error("⚠️ En az bir belirti seçin.")
+        st.error("⚠️ Lütfen en az bir semptom seçin.")
     else:
-        with st.spinner("Klinik veriler işleniyor..."):
+        with st.spinner("Algoritmalar ve AI çalışıyor..."):
             sonuc = gelismis_analiz(secilen_belirtiler, yas, ates, ta_sistolik, spo2)
-            time.sleep(1)
+            time.sleep(0.5)
             
             if sonuc["kirmizi"]:
                 st.markdown(f"<div class='alert-box critical'>🚨 {sonuc['kirmizi']}</div>", unsafe_allow_html=True)
             
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.markdown("### 📋 Diferansiyel Tanı ve Tetkikler")
-                st.write("**Olası Teşhisler:**")
+            col_left, col_right = st.columns(2)
+            with col_left:
+                st.subheader("📋 Algoritmik Bulgular")
+                st.write("**Olası Tanılar:**")
                 for t in list(set(sonuc["teshisler"])): st.write(f"- {t}")
-                st.write("**Laboratuvar & Görüntüleme:**")
+                st.write("**Tetkik Önerileri:**")
                 for tetkik in list(set(sonuc["kan"] + sonuc["goruntuleme"])): st.write(f"- {tetkik}")
                     
-            with col_b:
-                st.markdown("### 🤖 Yapay Zeka (Gemini) İleri Analizi")
-                v_str = f"Ateş:{ates}, TA:{ta_sistolik}/{ta_diastolik}, Nabız:{nabiz}, SpO2:{spo2}"
-                ai_cevap = gemini_analiz_et(yas, cinsiyet, v_str, secilen_belirtiler)
-                st.markdown(f"<div class='alert-box info-box'>{ai_cevap}</div>", unsafe_allow_html=True)
-
-st.markdown("<br><p style='text-align: center; color: gray; font-size: 12px;'>© 2026 Dahiliye Klinik Karar Destek</p>", unsafe_allow_html=True)
+            with col_right:
+                st.subheader("🤖 Gemini AI Derin Analiz")
+                v_str = f"
