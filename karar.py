@@ -85,4 +85,14 @@ if st.button("SİSTEMİ ÇALIŞTIR VE ANALİZ ET"):
             # Değişken adı hatası giderildi
             nihai_tetkikler = set(tetkikler if tetkikler else ["Tam Kan", "Biyokimya", "TİT"])
             for kalem in nihai_tetkikler:
-                st.
+                st.write(f"• {kalem}")
+        
+        with c2:
+            st.subheader("🤖 Gemini AI Derin Analiz")
+            try:
+                prompt = f"Doktor asistanısın. Yaş:{yas}, Ateş:{ates}, Bulgular:{', '.join(secilen)}. Detaylı tanı planı sun."
+                response = model.generate_content(prompt)
+                st.markdown(f"<div class='ai-box'>{response.text}</div>", unsafe_allow_html=True)
+            except Exception as e:
+                #
+                st.error(f"AI Analiz Hatası (API Key): {e}")
