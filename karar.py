@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 
 # 1. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN SIGNATURE)
-st.set_page_config(page_title="İSMAİL ORHAN | V23 ULTIMATE DAHİLİYE", page_icon="🏥", layout="wide")
+st.set_page_config(page_title="İSMAİL ORHAN | Dahiliye ROBOTU", page_icon="🏥", layout="wide")
 
 st.markdown("""
     <style>
@@ -36,7 +36,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # 2. ÜST PANEL
-st.markdown("<div class='main-header'><h1>DAHİLİYE KARAR DESTEK ROBOTU</h1><p>CHIEF DEVELOPER: İSMAİL ORHAN | V23 - 50+ HASTALIK MODU</p></div>", unsafe_allow_html=True)
+st.markdown("<div class='main-header'><h1>DAHİLİYE KARAR DESTEK ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN </p></div>", unsafe_allow_html=True)
 
 # 3. YAN PANEL - KAN SONUÇLARI (BOZULMADI, KAPSAM GENİŞLEDİ)
 with st.sidebar:
