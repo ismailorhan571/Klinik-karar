@@ -186,7 +186,7 @@ master_db = {
 }
 
 # 5. FINAL ANALİZ MOTORU
-if st.button("🚀 ANALİZİ BAŞLAT (V30 TITANIC)"):
+if st.button("🚀 ANALİZİ BAŞLAT"):
     if not b:
         st.error("Klinik veri girişi yapılmadı!")
     else:
