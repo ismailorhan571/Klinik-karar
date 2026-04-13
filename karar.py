@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 
 # 1. ULTRA-LUXURY ARCHITECTURAL INTERFACE (IVORY, GOLD & NOIR)
-st.set_page_config(page_title="İSMAİL ORHAN | Tıbbi Karar Robotu V18", page_icon="🏛️", layout="wide")
+st.set_page_config(page_title="İSMAİL ORHAN | Tıbbi Karar Robotu", page_icon="🏛️", layout="wide")
 
 st.markdown("""
     <style>
