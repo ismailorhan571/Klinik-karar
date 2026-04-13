@@ -1,68 +1,88 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. Sayfa Konfigürasyonu
-st.set_page_config(page_title="Karar Destek Sistemi", layout="wide")
+# 1. Sayfa Konfigürasyonu (Eski Geniş Düzen)
+st.set_page_config(page_title="Dahiliye Karar Destek", page_icon="⚕️", layout="wide")
 
-# 2. API ANAHTARI (Doğrudan Koda Gömüldü)
-# NOT: Anahtarı kopyalarken başında/sonunda boşluk olmadığına emin ol!
-MY_API_KEY = "AIzaSyD2DTlEW1mcv07-C3P1LsMHsCkV_XevkBo"
+# 2. API ANAHTARI (Doğrudan Koda Gömüldü - En Sağlam Yol)
+API_KEY = "AIzaSyD2DTlEW1mcv07-C3P1LsMHsCkV_XevkBo"
 
-def setup_ai():
-    try:
-        genai.configure(api_key=MY_API_KEY)
-        return genai.GenerativeModel('gemini-1.5-flash')
-    except Exception as e:
-        st.error(f"Kurulum Hatası: {e}")
-        return None
+try:
+    genai.configure(api_key=API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+except Exception as e:
+    st.error(f"API Bağlantı Hatası: {e}")
 
-model = setup_ai()
-
-# 3. Görsel Tasarım
+# 3. Zengin Görsel Tasarım (v3.7 Stili)
 st.markdown("""
     <style>
-    .stButton>button { background-color: #e63946; color: white; width: 100%; border-radius: 8px; font-weight: bold; }
-    .ai-box { background-color: #f1faee; padding: 15px; border-radius: 10px; border-left: 5px solid #457b9d; }
+    .main { background-color: #f4f7f9; }
+    .stButton>button { background-color: #004a99; color: white; font-weight: bold; border-radius: 12px; height: 3.5em; width: 100%; }
+    .stTabs [data-baseweb="tab"] { font-size: 18px; font-weight: 700; color: #004a99; }
+    .ai-box { background-color: #ffffff; padding: 25px; border-radius: 15px; border-left: 8px solid #004a99; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("⚕️ Dahiliye Klinik Karar Destek")
-st.write(f"**Geliştirici:** İsmail Orhan | **Sürüm:** 4.2")
+# 4. Header
+st.title("⚕️ Dahiliye Klinik Karar Destek Sistemi (CDSS)")
+st.markdown(f"**Geliştirici:** İsmail Orhan | **Sürüm:** 3.7 (Restore Edilmiş & Stabil)")
+st.divider()
 
-# 4. Giriş Alanları
+# 5. Sidebar: Vital Bulgular
 with st.sidebar:
-    st.header("Hasta Verileri")
-    yas = st.number_input("Yaş", 0, 110, 45)
-    ates = st.slider("Ateş", 35.0, 41.0, 36.6)
-    semptom_listesi = ["Kelebek Döküntü", "Melena", "Hematemez", "Karın Ağrısı (Sağ Alt)", "Göğüs Ağrısı"]
-    secilenler = st.multiselect("Semptomlar", semptom_listesi)
+    st.header("📋 Hasta Vitalleri")
+    yas = st.number_input("Yaş", 0, 120, 45)
+    ates = st.slider("Ateş (°C)", 34.0, 42.0, 36.6, 0.1)
+    nabiz = st.number_input("Nabız", 30, 220, 80)
+    ta_sis = st.number_input("Sistolik TA", 50, 250, 120)
+    ta_dia = st.number_input("Diastolik TA", 30, 150, 80)
+    spo2 = st.slider("SpO2 (%)", 50, 100, 98)
 
-# 5. Analiz Kısmı
-if st.button("ANALİZİ BAŞLAT"):
-    if not secilenler:
-        st.warning("Lütfen belirti seçin.")
+# 6. Sekmeli Semptom Paneli (v3.7'nin Kalbi)
+st.subheader("🔍 Klinik Bulgular")
+t1, t2, t3, t4 = st.tabs(["🩺 Genel & Gastro", "🫁 Kardiyo & Solunum", "🧠 Nöroloji", "🦋 Romatoloji & Endokrin"])
+
+secilen = []
+with t1:
+    secilen.extend(st.multiselect("Gastrointestinal", ["Karın Ağrısı (Sağ Alt)", "Melena", "Hematemez", "Sarılık", "Kilo Kaybı", "Diyare"]))
+with t2:
+    secilen.extend(st.multiselect("Kardiyovasküler", ["Göğüs Ağrısı (Baskı)", "Nefes Darlığı", "Çarpıntı", "Hemoptizi", "Öksürük"]))
+with t3:
+    secilen.extend(st.multiselect("Nörolojik", ["Şiddetli Baş Ağrısı", "Konfüzyon", "Güç Kaybı", "Dizartri", "Ense Sertliği"]))
+with t4:
+    secilen.extend(st.multiselect("Özel Alanlar", ["Kelebek Döküntü", "Sabah Sertliği", "Eklem Şişliği", "Dizüri", "Oligüri"]))
+
+# 7. Manuel Analiz Motoru
+def analiz(s, a):
+    t, tet = [], []
+    ss = set(s)
+    if {"Karın Ağrısı (Sağ Alt)", "Melena"}.intersection(ss):
+        t.extend(["Akut Apandisit", "GİS Kanama"])
+        tet.extend(["Batın BT", "Endoskopi", "Hemogram"])
+    if "Kelebek Döküntü" in ss:
+        t.append("Sistemik Lupus (SLE)")
+        tet.extend(["ANA", "Anti-dsDNA", "Sedim"])
+    if a > 38.5:
+        t.append("Sistemik Enfeksiyon / Sepsis")
+        tet.extend(["CRP", "Prokalsitonin", "Kültür"])
+    return t, tet
+
+# 8. Sonuç Bölümü
+if st.button("SİSTEMİ ÇALIŞTIR VE ANALİZ ET"):
+    if not secilen:
+        st.warning("Lütfen bulgu seçin.")
     else:
-        col1, col2 = st.columns(2)
+        tanilar, tetkikler = analiz(secilen, ates)
+        c1, c2 = st.columns(2)
         
-        with col1:
-            st.subheader("📋 Klinik Ön Tanılar")
-            # Basit Algoritma
-            if "Kelebek Döküntü" in secilenler:
-                st.write("✅ **Sistemik Lupus (SLE)** - *Tetkik: ANA, Anti-dsDNA*")
-            if "Melena" in secilenler or "Hematemez" in secilenler:
-                st.write("✅ **GİS Kanama** - *Tetkik: Endoskopi, Hb takibi*")
-            if "Karın Ağrısı (Sağ Alt)" in secilenler:
-                st.write("✅ **Akut Apandisit** - *Tetkik: Batın BT, WBC*")
-                
-        with col2:
-            st.subheader("🤖 Gemini AI Analizi")
-            if model:
-                try:
-                    p = f"Doktor asistanı ol. Yaş:{yas}, Bulgular:{', '.join(secilenler)}. Analiz et."
-                    res = model.generate_content(p)
-                    st.markdown(f"<div class='ai-box'>{res.text}</div>", unsafe_allow_html=True)
-                except Exception as e:
-                    # Hata mesajını detaylı basıyoruz
-                    st.error(f"API Hatası Oluştu: {e}")
-            else:
-                st.error("Model yüklenemedi, API anahtarını kontrol edin.")
+        with c1:
+            st.subheader("📋 Diferansiyel Tanı")
+            for h in (tanilar if tanilar else ["İleri Tetkik Gerekiyor"]):
+                st.write(f"✅ {h}")
+            
+            st.divider()
+            st.subheader("🧪 Önerilen Tetkikler")
+            # Değişken adı hatası giderildi
+            nihai_tetkikler = set(tetkikler if tetkikler else ["Tam Kan", "Biyokimya", "TİT"])
+            for kalem in nihai_tetkikler:
+                st.
