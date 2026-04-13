@@ -131,4 +131,15 @@ if st.button("KLİNİK ANALİZİ BAŞLAT VE GEMINI'YE SORGULA"):
             try:
                 # Prompt Zenginleştirme
                 v_ozet = f"Yaş:{yas}, Cinsiyet:{cinsiyet}, Ateş:{ates}, TA:{ta_s}/{ta_d}, Nabız:{nabiz}, SpO2:{spo2}"
-                prompt =
+                prompt = f"Sen uzman bir dahiliye hekimisin. Şu hastayı değerlendir: {v_ozet}. Belirtiler: {', '.join(secilen)}. Ayırıcı tanılarını, en olası tanıyı ve klinik yönetim planını açıkla."
+                
+                response = model.generate_content(prompt)
+                if response.text:
+                    st.markdown(f"<div class='status-box ai-box'>{response.text}</div>", unsafe_allow_html=True)
+                else:
+                    st.warning("AI yanıt üretemedi, lütfen tekrar deneyin.")
+            except Exception as e:
+                # Detaylı hata mesajı
+                st.error(f"AI Analiz Hatası: {e}. API anahtarının aktifleşmesi 60 saniye sürebilir.")
+
+st.markdown("<br><p style='text-align: center; color: gray; font-size: 11px;'>© 2026 Dahiliye Klinik Karar Destek v3.7 | Profesyonel Tıbbi Kullanım İçindir</p>", unsafe_allow_html=True)
