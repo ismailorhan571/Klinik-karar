@@ -159,4 +159,4 @@ if st.button("KLİNİK ANALİZİ BAŞLAT"):
                     
             with col_right:
                 st.subheader("🤖 Gemini AI Derin Analiz")
-                v_str = f"
+                v_str = "f"
