@@ -7,7 +7,7 @@ st.set_page_config(page_title="Klinik Karar Destek Sistemi", page_icon="⚕️",
 
 # API Yapılandırması (Doğrudan Tanımlama)
 # Sırlar kısmı çalışmadığı için anahtarı buraya elle giriyoruz.
-MY_API_KEY = "API_ANAHTARINI_BURAYA_YAZ" 
+MY_API_KEY = "AIzaSyD2DTlEW1mcvO7-C3P1LsMHsCkV_XevkBo" 
 
 if MY_API_KEY != "AIzaSyD2DTlEW1mcvO7-C3P1LsMHsCkV_XevkBo":
     genai.configure(api_key=MY_API_KEY)
@@ -85,8 +85,3 @@ def klinik_analiz(s, y, a, ta, sp):
     if {"Aseton Kokusu", "Poliüri", "Polidipsi"}.intersection(ss):
         r["tanilar"].append("Diyabetik Ketoasidoz (DKA) / HHS")
         r["tetkikler"].extend(["Kan Şekeri", "Venöz Kan Gazı (pH/HCO3)", "İdrar Ketonu", "HbA1c"])
-
-    # Romatolojik / Hematolojik
-    if {"Kelebek Döküntü", "Sabah Sertliği", "Peteşi/Purpura"}.intersection(ss):
-        r["tanilar"].extend(["Sistemik Lupus (SLE)", "Vaskülit", "İmmün Trombositopeni (İTP)"])
-        r["tet
