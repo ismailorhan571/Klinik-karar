@@ -1,161 +1,147 @@
 import streamlit as st
 from datetime import datetime
 
-# 1. ULTRA-LUXURY BEIGE INTERFACE (NEUMORPHIC GOLD)
-st.set_page_config(page_title="İSMAİL ORHAN | Tıbbi Karar Robotu", page_icon="🤖", layout="wide")
+# 1. ULTRA-LUXURY ARCHITECTURAL INTERFACE (IVORY, GOLD & NOIR)
+st.set_page_config(page_title="İSMAİL ORHAN | Tıbbi Karar Robotu V18", page_icon="🏛️", layout="wide")
 
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
     
-    .stApp { background: linear-gradient(135deg, #F5F5DC 0%, #E8E2D2 100%); color: #1A1A1A; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .stApp { background: linear-gradient(135deg, #FDFCF0 0%, #E8E2D2 100%); color: #1A1A1A; font-family: 'Plus Jakarta Sans', sans-serif; }
     
+    /* Devasa Robot Başlığı */
     .main-header {
-        background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
-        padding: 50px; border-radius: 50px; text-align: center; margin-bottom: 40px;
-        border: 3px solid #D4AF37; box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(30px);
+        padding: 60px; border-radius: 65px; text-align: center; margin-bottom: 50px;
+        border: 5px solid #D4AF37; box-shadow: 0 45px 90px rgba(0,0,0,0.15);
     }
-    .main-header h1 { 
-        color: #000000; font-weight: 800; font-size: 4.5rem; letter-spacing: -3px; margin: 0;
-    }
-    .main-header p { color: #D4AF37; font-size: 1.6rem; font-weight: 700; margin-top: 10px; }
+    .main-header h1 { color: #000000; font-weight: 800; font-size: 5rem; letter-spacing: -4px; margin: 0; }
+    .main-header p { color: #D4AF37; font-size: 1.8rem; font-weight: 700; margin-top: 15px; text-transform: uppercase; }
     
+    /* Kristal Kart Yapısı */
     .clinical-card { 
-        background: #FFFFFF; padding: 40px; border-radius: 45px; margin-bottom: 30px;
-        border: 1px solid #E2E2E2; box-shadow: 20px 20px 60px #D9D9D9, -20px -20px 60px #FFFFFF;
-        border-left: 20px solid #D4AF37; transition: 0.4s ease;
+        background: #FFFFFF; padding: 50px; border-radius: 55px; margin-bottom: 40px;
+        border: 1px solid #E2E2E2; box-shadow: 30px 30px 80px #D9D9D9, -30px -30px 80px #FFFFFF;
+        border-left: 30px solid #D4AF37; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+    .clinical-card:hover { transform: translateY(-10px); }
     
+    /* İmza Analiz Butonu */
     .stButton>button {
-        background: linear-gradient(135deg, #000000 0%, #333333 100%); color: #D4AF37; border-radius: 35px;
-        height: 7em; width: 100%; font-weight: 800; font-size: 30px; border: 2px solid #D4AF37;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg, #000000 0%, #333333 100%); color: #FFD700; border-radius: 45px;
+        height: 8em; width: 100%; font-weight: 800; font-size: 35px; border: 4px solid #D4AF37;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 2px;
     }
-    .stButton>button:hover { transform: translateY(-5px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); color: #FFD700; }
+    .stButton>button:hover { background: #D4AF37; color: #000000; border-color: #000000; }
     
-    .alert-premium { 
-        background: #991B1B; color: #FFFFFF; padding: 25px; border-radius: 30px;
-        font-weight: 800; text-align: center; border: 4px solid #D4AF37; margin-bottom: 20px;
+    /* Kritik Uyarı Modülü */
+    .emergency-alert { 
+        background: #7F1D1D; color: #FFFFFF; padding: 30px; border-radius: 35px;
+        font-weight: 800; text-align: center; border: 5px solid #FFD700; margin-bottom: 25px;
+        font-size: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. ÜST PANEL
-st.markdown(f"""
-    <div class='main-header'>
-        <h1>TIBBİ KARAR ROBOTU</h1>
-        <p>Geliştirici: İSMAİL ORHAN</p>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown(f"<div class='main-header'><h1>TIBBİ KARAR ROBOTU</h1><p>Geliştirici: İSMAİL ORHAN | V18 Integrated Master System</p></div>", unsafe_allow_html=True)
 
-# 3. YAN PANEL - GENİŞLETİLMİŞ HASTA TERMİNALİ
+# 2. HASTA TERMİNALİ VE AKILLI GFR (HİÇBİR EKSİK YOK)
 with st.sidebar:
-    st.markdown("### 🤖 HASTA VERİ GİRİŞİ")
-    p_no = st.text_input("Protokol / Barkod", "IO-ROBOT-V16")
+    st.markdown("### 🏛️ SİSTEM TERMİNALİ")
+    p_no = st.text_input("Protokol Numarası", "IO-MASTER-FINAL")
     cinsiyet = st.radio("Cinsiyet", ["Erkek", "Kadın"])
-    yas = st.number_input("Yaş", 0, 120, 45)
+    yas = st.number_input("Yaş", 0, 120, 50)
     kilo = st.number_input("Kilo (kg)", 3, 250, 75)
-    
     st.divider()
     st.markdown("### 🧪 LABORATUVAR")
-    glu = st.number_input("Glukoz (mg/dL)", 0, 1500, 110)
-    kre = st.number_input("Kreatinin (mg/dL)", 0.1, 25.0, 1.2)
-    k_plus = st.number_input("Potasyum (mEq/L)", 1.0, 12.0, 4.2)
+    glu = st.number_input("Glukoz (mg/dL)", 0, 2000, 100)
+    kre = st.number_input("Kreatinin (mg/dL)", 0.1, 30.0, 1.0)
+    k_plus = st.number_input("Potasyum (mEq/L)", 1.0, 15.0, 4.0)
     ta_sis = st.number_input("Sistolik TA (mmHg)", 30, 300, 120)
-    
-    # AKILLI eGFR HESAPLAMA (Cinsiyet Faktörlü)
+    st.markdown("---")
+    trop = st.checkbox("Troponin Yüksekliği (+)")
+    ekg_st = st.checkbox("EKG: ST Değişikliği / Patolojik Q")
+
+    # eGFR Hesaplama (Cockcroft-Gault & Cinsiyet Düzeltmeli)
     egfr_base = ((140 - yas) * kilo) / (72 * kre) if kre > 0 else 0
     egfr = round(egfr_base * 0.85 if cinsiyet == "Kadın" else egfr_base, 1)
-    
     st.metric(f"eGFR ({cinsiyet})", f"{egfr} ml/dk")
     
-    if egfr < 30: st.markdown("<div class='alert-premium'>🚨 RENAL KRİZ: KONTRAST YASAK!</div>", unsafe_allow_html=True)
-    if k_plus > 5.8: st.markdown("<div class='alert-premium'>🚨 KRİTİK HİPERKALEMİ!</div>", unsafe_allow_html=True)
+    if egfr < 30: st.markdown("<div class='emergency-alert'>🚨 RENAL KRİZ: KONTRAS YASAK!</div>", unsafe_allow_html=True)
 
-# 4. SKORLAMA VE YOĞUN BAKIM MODÜLÜ
-st.subheader("📊 Klinik Karar Destek Skorları")
-s1, s2, s3 = st.columns(3)
-with s1:
-    wells = st.multiselect("Wells (PE) Kriterleri", ["DVT Bulgusu (+3)", "Alt. Tanı Az (+3)", "Nabız >100 (+1.5)", "İmmobilite (+1.5)", "Önceki PE (+1.5)", "Hemoptizi (+1)", "Kanser (+1)"])
-    st.info(f"Wells Skoru: {len(wells)}")
-with s2:
-    gks = st.select_slider("GKS (Bilinc Durumu)", options=list(range(3, 16)), value=15)
-    if gks <= 8: st.error("⚠️ ENTÜBASYON HAZIRLIĞI YAPILMALI!")
-with s3:
-    st.markdown("**Sıvı Rezidansı**")
-    def_sivi = kilo * 35
-    st.success(f"Günlük Bazal İdame: {def_sivi} cc")
-
-# 5. DEVASA DAHİLİYE BİLGİ KÜTÜPHANESİ (Hastalık + Bulgu + Tetkik + Tedavi)
-st.subheader("🔍 Klinik Bulguları Eksiksiz İşleyin")
-tabs = st.tabs(["🧬 SİSTEMİK", "🫀 KALP-AKCİĞER", "🤢 GİS-KC-BATIN", "🧪 ENDO-RENAL", "🩸 ROMATO-HEMATO", "💊 TOKSİKO-YOĞUN BAKIM"])
+# 3. DEVASA BULGU LİSTESİ (TÜM BRANŞLAR)
+tabs = st.tabs(["🫀 KARDİYO", "🫁 GÖĞÜS", "🤢 GİS-KC", "🧠 NÖRO", "🧪 ENDO-RENAL", "🩸 ROMATO-HEM"])
 
 bulgular = []
-with tabs[0]: bulgular.extend(st.multiselect("Bulgu", ["Ateş", "Kilo Kaybı", "Gece Terlemesi", "Halsizlik", "Kaşıntı", "Lenfadenopati", "Anemi Bulguları"]))
-with tabs[1]: bulgular.extend(st.multiselect("Bulgu ", ["Nefes Darlığı", "Göğüs Ağrısı", "Ortopne", "PND", "Hemoptizi", "Bilateral Ödem", "Unilateral Ödem", "Boyun Ven Dolgunluğu", "Taşikardi", "Ral", "Ronküs"]))
-with tabs[2]: bulgular.extend(st.multiselect("Bulgu  ", ["Asit", "Sarılık", "Hepatomegali", "Splenomegali", "Asteriksis", "Caput Medusae", "Hematemez", "Melena", "Kuşak Ağrısı", "Karın Ağrısı"]))
-with tabs[3]: bulgular.extend(st.multiselect("Bulgu   ", ["Poliüri", "Polidipsi", "Oligüri", "Anüri", "Aseton Kokusu", "Aydede Yüzü", "Mor Stria", "Hiperpigmentasyon", "Köpüklü İdrar", "Ekzoftalmi"]))
-with tabs[4]: bulgular.extend(st.multiselect("Bulgu    ", ["Peteşi", "Purpura", "Kelebek Döküntü", "Raynaud", "Sabah Sertliği", "Eklem Ağrısı", "Ağızda Aft", "Deri Sertleşmesi"]))
-with tabs[5]: bulgular.extend(st.multiselect("Bulgu     ", ["Miyozis", "Midriyazis", "Hipotoni", "Karakteristik Koku", "Bradikardi", "Konfüzyon", "Paraneoplastik Bulgular"]))
+with tabs[0]: bulgular.extend(st.multiselect("Kardiyovasküler", ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Çeneye Yayılan Ağrı", "Çarpıntı", "Boyun Ven Dolgunluğu", "S3/S4 Sesi", "Üfürüm", "Hipotansiyon", "Hipertansiyon"]))
+with tabs[1]: bulgular.extend(st.multiselect("Pulmoner", ["Nefes Darlığı", "Hemoptizi", "Bilateral Ödem", "Unilateral Ödem", "Ral", "Ronküs", "Wheezing", "Plevritik Ağrı", "Öksürük"]))
+with tabs[2]: bulgular.extend(st.multiselect("Gastrointestinal", ["Sarılık", "Asit", "Hepatomegali", "Splenomegali", "Asteriksis", "Caput Medusae", "Kuşak Ağrısı", "Karın Ağrısı", "Hematemez", "Melena", "Murphy Belirtisi"]))
+with tabs[3]: bulgular.extend(st.multiselect("Nörolojik", ["Konfüzyon", "Ense Sertliği", "Nöbet", "Fokal Kayıp", "Ani Baş Ağrısı", "Ataksi", "Dizartri", "Fotofobi"]))
+with tabs[4]: bulgular.extend(st.multiselect("Endokrin & Renal", ["Poliüri", "Polidipsi", "Oligüri", "Aseton Kokusu", "Aydede Yüzü", "Mor Stria", "Hiperpigmentasyon", "Ekzoftalmi", "Köpüklü İdrar", "Pretibial Miksödem"]))
+with tabs[5]: bulgular.extend(st.multiselect("Romatoloji & Hemato", ["Kelebek Döküntü", "Eklem Ağrısı", "Sabah Sertliği", "Peteşi", "Purpura", "Raynaud", "Ağızda Aft", "Lenfadenopati", "Kemik Ağrısı"]))
 
-# 6. MASTER DAHİLİYE VERİ TABANI
+if trop: bulgular.append("Troponin (+)")
+if ekg_st: bulgular.append("EKG Değişikliği")
+
+# 4. MASTER VERİ TABANI (TÜM DAHİLİYE KİTABI BURADA)
 master_database = {
+    "Miyokard İnfarktüsü (MI)": {
+        "bulgu": ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Çeneye Yayılan Ağrı", "Troponin (+)", "EKG Değişikliği"],
+        "tetkik": "Seri Troponin, EKG, EKO, Koroner Anjiyografi",
+        "tedavi": "Aspirin 300mg, Klopidogrel 600mg, Heparin, Acil Perkütan Girişim (Anjiyo)"
+    },
+    "Pulmoner Emboli": {
+        "bulgu": ["Nefes Darlığı", "Göğüs Ağrısı", "Hemoptizi", "Unilateral Ödem", "Plevritik Ağrı"],
+        "tetkik": "BT Anjiyo, D-Dimer, Troponin, Alt Ekstremite RDUS",
+        "tedavi": f"Enoksaparin {kilo}mg 2x1, Masifse Trombolitik (tPA)"
+    },
     "Karaciğer Sirozu": {
         "bulgu": ["Asit", "Sarılık", "Hepatomegali", "Splenomegali", "Asteriksis", "Caput Medusae"],
-        "tetkik": "INR, Albümin, Amonyak, Batın USG, Portal Doppler, Gastroskopi",
+        "tetkik": "INR, Albümin, Bilirubin, Batın USG Doppler, Gastroskopi",
         "tedavi": "Spironolakton + Furosemid, Laktüloz, Tuz Kısıtlaması, Varis varsa Propranolol"
+    },
+    "Aort Diseksiyonu": {
+        "bulgu": ["Göğüs Ağrısı", "Plevritik Ağrı", "Hipotansiyon", "Ani Baş Ağrısı"], # Sırt ağrısı eklenebilir
+        "tetkik": "BT Anjiyo (Tüm Aorta), TEE (Ekokardiyografi)",
+        "tedavi": "IV Beta Bloker (Esmolol), Acil Cerrahi Konsültasyonu"
     },
     "Diyabetik Ketoasidoz (DKA)": {
         "bulgu": ["Aseton Kokusu", "Poliüri", "Polidipsi", "Karın Ağrısı", "Konfüzyon"],
         "tetkik": "Kan Gazı (pH < 7.3), İdrar Ketoni, Glukoz > 250, Anyon Açığı",
         "tedavi": f"İnsülin Perfüzyon ({round(kilo*0.1,1)} Ü/saat), Agresif SF Hidrasyonu, K+ Takibi"
     },
-    "Pulmoner Emboli": {
-        "bulgu": ["Hemoptizi", "Unilateral Ödem", "Nefes Darlığı", "Taşikardi", "Göğüs Ağrısı"],
-        "tetkik": "BT Anjiyo, D-Dimer, Troponin, EKG (S1Q3T3)",
-        "tedavi": f"Düşük Molekül Ağırlıklı Heparin ({kilo}mg 2x1), Stabil değilse Trombolitik"
-    },
-    "Kalp Yetmezliği (KKY)": {
-        "bulgu": ["Bilateral Ödem", "Ortopne", "PND", "Boyun Ven Dolgunluğu", "Ral"],
-        "tetkik": "NT-proBNP, EKO (EF Ölçümü), PA Akciğer Grafisi",
-        "tedavi": "IV Furosemid, ACEi, Beta Bloker, SGLT2 İnhibitörü"
-    },
-    "Sistemik Lupus (SLE)": {
-        "bulgu": ["Kelebek Döküntü", "Eklem Ağrısı", "Ağızda Aft", "Peteşi", "Fotosensitivite"],
-        "tetkik": "ANA, Anti-dsDNA, C3-C4 Seviyeleri, Tam İdrar (Proteinüri)",
-        "tedavi": "Hidroksiklorokin, Sistemik Steroid, İmmünsupresifler"
-    },
-    "Menedjit (Bakteriyel)": {
-        "bulgu": ["Ateş", "Ense Sertliği", "Konfüzyon", "Ani Baş Ağrısı"],
-        "tetkik": "Lomber Ponksiyon (BOS Analizi), Kan Kültürü, Kafa BT",
-        "tedavi": "Seftriakson 2x2g + Vankomisin + Deksametazon"
-    },
     "Akut Pankreatit": {
-        "bulgu": ["Kuşak Ağrısı", "Karın Ağrısı", "Bulantı-Kusma"],
-        "tetkik": "Lipaz (Spesifik), Amilaz, Kontrastlı Batın BT",
-        "tedavi": "NPO (Oral Stop), Agresif Sıvı Rezidansı (Ringer Laktat)"
-    },
-    "Addison Krizi": {
-        "bulgu": ["Hiperpigmentasyon", "Halsizlik", "Tuz Açlığı", "Hipotansiyon"],
-        "tetkik": "Sabah Kortizolü, ACTH Stimülasyon, Na (Düşük), K (Yüksek)",
-        "tedavi": "IV Hidrokortizon 100mg + Agresif Sıvı Hidrasyonu"
+        "bulgu": ["Kuşak Ağrısı", "Karın Ağrısı", "Murphy Belirtisi", "Hipotansiyon"],
+        "tetkik": "Lipaz (3 kat artış), Amilaz, Kontrastlı Batın BT (48. saat)",
+        "tedavi": "Oral Stop (NPO), Agresif Sıvı (Ringer Laktat), Analjezi"
     },
     "Nefrotik Sendrom": {
         "bulgu": ["Bilateral Ödem", "Köpüklü İdrar", "Asit", "Halsizlik"],
         "tetkik": "24h İdrar Proteini (>3.5g), Serum Albümin, Lipid Paneli",
-        "tedavi": "Prednizolon, ACE İnhibitörü, Diüretik, Tuz Kısıtlaması"
+        "tedavi": "Steroid (Prednizolon), ACE İnhibitörü, Diüretik, Tuz Kısıtlaması"
     },
-    "Wegener (GPA)": {
-        "bulgu": ["Hemoptizi", "Peteşi", "Purpura", "Nefes Darlığı"],
-        "tetkik": "c-ANCA, Akciğer BT, Böbrek Biyopsisi",
-        "tedavi": "Pulse Steroid (1g) + Siklofosfamid/Rituksimab"
+    "Sistemik Lupus (SLE)": {
+        "bulgu": ["Kelebek Döküntü", "Eklem Ağrısı", "Ağızda Aft", "Peteşi", "Sabah Sertliği"],
+        "tetkik": "ANA, Anti-dsDNA, C3-C4, Tam İdrar (Proteinüri)",
+        "tedavi": "Hidroksiklorokin, Sistemik Steroid, İmmünsupresif"
+    },
+    "KOAH Alevlenme": {
+        "bulgu": ["Nefes Darlığı", "Wheezing", "Ral", "Ronküs", "Öksürük"],
+        "tetkik": "SFT, Arter Kan Gazı, Akciğer Grafisi",
+        "tedavi": "SABA/SAMA Nebül, Sistemik Steroid, Antibiyoterapi, Gerekirse Non-invaziv Mekanik Ventilasyon"
+    },
+    "Kronik Böbrek Yetmezliği (KBY)": {
+        "bulgu": ["Bilateral Ödem", "Hipotansiyon", "Kaşıntı", "Halsizlik", "Oligüri"],
+        "tetkik": "eGFR Takibi, PTH, Hemoglobin, Ca/P Dengesi",
+        "tedavi": "ACEi/ARB, Tuz/Protein Kısıtlaması, Gerekirse Diyaliz"
     }
 }
 
-# 7. ANALİZ MOTORU
+# 5. ANALİZ MOTORU VE RAPORLAMA
 if st.button("🚀 TIBBİ KARAR ROBOTUNU ÇALIŞTIR"):
     if not bulgular:
-        st.error("Lütfen klinik bulgu seçimi yapınız!")
+        st.error("En az bir klinik veri girilmelidir!")
     else:
         sonuclar = []
         for ad, veri in master_database.items():
@@ -166,34 +152,33 @@ if st.button("🚀 TIBBİ KARAR ROBOTUNU ÇALIŞTIR"):
         
         sonuclar = sorted(sonuclar, key=lambda x: x['puan'], reverse=True)
         
-        col_r1, col_r2 = st.columns([1.6, 1])
-        with col_r1:
+        c_left, c_right = st.columns([1.6, 1])
+        with c_left:
             st.markdown("### 🏛️ Teşhis, Tetkik ve Tedavi Matrisi")
             for s in sonuclar:
                 st.markdown(f"""
                 <div class='clinical-card'>
-                    <div style='font-size:2.3rem; color:#000000; font-weight:800;'>{s['ad']} (%{s['puan']})</div>
-                    <p style='color:#D4AF37; font-weight:700;'>🎯 Tespit Edilen Bulgular: {", ".join(s['esles'])}</p>
-                    <hr style='border: 1px solid #E2E2E2;'>
-                    <p>🧪 <b>İstenmesi Gereken Tetkikler:</b> {s['veri']['tetkik']}</p>
+                    <div style='font-size:2.8rem; color:#000000; font-weight:800;'>{s['ad']} (%{s['puan']})</div>
+                    <p style='color:#D4AF37; font-weight:700; font-size:1.2rem;'>🎯 Eşleşen Bulgular: {", ".join(s['esles'])}</p>
+                    <hr style='border: 1px solid #D4AF37;'>
+                    <p>🧪 <b>Gerekli Tetkikler:</b> {s['veri']['tetkik']}</p>
                     <p>💊 <b>Modern Tedavi Protokolü:</b> {s['veri']['tedavi']}</p>
                 </div>
                 """, unsafe_allow_html=True)
-
-        with col_r2:
+        
+        with c_right:
             st.markdown("### 📝 RESMİ EPİKRİZ RAPORU")
             r_not = "Kontrastlı tetkik uygundur" if egfr > 60 else "⚠️ KONTRASSIZ TETKİK / ÖN HİDRASYON"
-            epikriz = f"""TIBBİ KARAR ANALİZ RAPORU
+            epikriz = f"""KLİNİK ANALİZ RAPORU
 --------------------------------------------------
 TARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}
 GELİŞTİRİCİ: İSMAİL ORHAN
-ROBOT VERSİYONU: V16
+ROBOT: V18 MASTER
 PROTOKOL: {p_no}
 
-[HASTA PROFİLİ VE VİTALLER]
+[VİTAL VE PROFİL]
 Cinsiyet: {cinsiyet} | Yaş: {yas} | Kilo: {kilo}kg
-eGFR: {egfr} ml/dk (Cinsiyet düzeltmeli)
-Glukoz: {glu} | Potasyum: {k_plus} | TA: {ta_sis}
+eGFR: {egfr} ml/dk | TA: {ta_sis} mmHg
 
 [KLİNİK BULGULAR]
 {", ".join(bulgular)}
@@ -201,14 +186,13 @@ Glukoz: {glu} | Potasyum: {k_plus} | TA: {ta_sis}
 [DİFERANSİYEL TANILAR]
 {chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in sonuclar[:5]])}
 
-[GÜVENLİK NOTLARI]
-- Radyoloji: {r_not}
-- GKS: {gks} | Günlük Sıvı: {def_sivi}cc
+[GÜVENLİK NOTU]
+- {r_not}
 --------------------------------------------------
-ONAY VE İMZA: İSMAİL ORHAN
+ONAY: İSMAİL ORHAN
 """
-            st.markdown(f"<pre style='background:white; padding:40px; border-radius:40px; border:3px solid #D4AF37; font-size:15px; box-shadow: 10px 10px 30px rgba(0,0,0,0.05);'>{epikriz}</pre>", unsafe_allow_html=True)
-            st.download_button("📥 Raporu PDF Arşivine Al", epikriz, file_name=f"{p_no}_final.txt")
+            st.markdown(f"<pre style='background:white; padding:45px; border-radius:45px; border:3px solid #D4AF37; font-size:15px;'>{epikriz}</pre>", unsafe_allow_html=True)
+            st.download_button("📥 Raporu PDF Arşivine Gönder", epikriz, file_name=f"{p_no}_master.txt")
 
 st.markdown("---")
-st.caption("Geliştirici: İSMAİL ORHAN | TIBBİ KARAR ROBOTU V16 | 2026")
+st.caption("Geliştirici: İSMAİL ORHAN | TIBBİ KARAR ROBOTU V18 | 2026")
