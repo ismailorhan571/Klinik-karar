@@ -1,8 +1,8 @@
 import streamlit as st
 from datetime import datetime
 
-# 1. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V29 TITANIC-85)
-st.set_page_config(page_title="İSMAİL ORHAN | DAHİLİYE KLİNİK KARAR ROBOTU ", page_icon="💊", layout="wide")
+# 1. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V30 TITANIC-GENDER)
+st.set_page_config(page_title="İSMAİL ORHAN | V30 MASTER", page_icon="💊", layout="wide")
 
 st.markdown("""
     <style>
@@ -33,12 +33,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN |2026</p></div>", unsafe_allow_html=True)
+st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN | V30 TITANIC-GENDER</p></div>", unsafe_allow_html=True)
 
-# 2. LABORATUVAR TERMİNALİ
+# 2. LABORATUVAR TERMİNALİ (CINSIYET EKLENDI)
 with st.sidebar:
     st.markdown("### 🏛️ LABORATUVAR VERİ MERKEZİ")
-    p_no = st.text_input("Protokol No", "İSMAİL-V29-ULTRA")
+    p_no = st.text_input("Protokol No", "İSMAİL-V30-FINAL")
+    cinsiyet = st.radio("Cinsiyet", ["Erkek", "Kadın"]) # YENİ EKLENEN
     yas = st.number_input("Yaş", 0, 120, 45)
     kilo = st.number_input("Kilo (kg)", 5, 250, 85)
     st.divider()
@@ -50,14 +51,20 @@ with st.sidebar:
     na = st.number_input("Sodyum (Na)", 100, 190, 140)
     k = st.number_input("Potasyum (K)", 1.0, 15.0, 4.2)
     ca = st.number_input("Kalsiyum (Ca)", 5.0, 22.0, 9.5)
-    ldh = st.number_input("LDH", 0, 15000, 210)
     ast_alt = st.checkbox("AST/ALT > 3 Kat Artış")
     trop = st.checkbox("Troponin Pozitif (+)")
     
-    egfr = round(((140 - yas) * kilo) / (72 * kre), 1) if kre > 0 else 0
+    # Cinsiyete Duyarlı eGFR Hesabı
+    if kre > 0:
+        base_egfr = ((140 - yas) * kilo) / (72 * kre)
+        if cinsiyet == "Kadın":
+            base_egfr = base_egfr * 0.85
+        egfr = round(base_egfr, 1)
+    else:
+        egfr = 0
     st.metric("eGFR Skoru", f"{egfr} ml/dk")
 
-# 3. GENİŞLETİLMİŞ KLİNİK BULGU SEÇİMİ
+# 3. KLİNİK BULGU SEÇİMİ
 st.subheader("🔍 Klinik Semptom ve Fizik Muayene Bulguları")
 t1, t2, t3, t4, t5, t6, t7 = st.tabs(["🫀 KARDİYO", "🫁 PULMONER", "🤢 GİS-KC", "🧪 ENDOKRİN", "🧠 NÖROLOJİ", "🩸 HEMATO-ONKO", "🧬 ROMATO-ENF"])
 
@@ -70,18 +77,17 @@ with t5: b.extend(st.multiselect("NÖRO", ["Konfüzyon", "Ense Sertliği", "Nöb
 with t6: b.extend(st.multiselect("HEM", ["Peteşi", "Purpura", "Ekimoz", "Lenfadenopati", "Kilo Kaybı", "Gece Terlemesi", "Kaşıntı", "Solukluk", "Kemik Ağrısı", "Diş Eti Kanaması", "B Semptomları"]))
 with t7: b.extend(st.multiselect("ROM", ["Ateş (>38)", "Eklem Ağrısı", "Sabah Sertliği", "Kelebek Döküntü", "Raynaud", "Ağızda Aft", "Göz Kuruluğu", "Deri Sertleşmesi", "Uveit", "Paterji Reaksiyonu", "Bel Ağrısı (İnflamatuar)"]))
 
-# Otomatik Lab Verisi İşleme
+# Otomatik Lab Değerlendirme
 if kre > 1.3: b.append("Böbrek Hasarı")
 if hb < 11: b.append("Anemi")
 if wbc > 12000: b.append("Lökositoz")
 if plt < 140000: b.append("Trombositopeni")
 if glu > 180: b.append("Hiperglisemi")
 if na < 135: b.append("Hiponatremi")
-if ca > 10.5: b.append("Hiperkalsemi")
 if ast_alt: b.append("KC Hasarı")
 if trop: b.append("Kardiyak İskemi")
 
-# 4. MASTER 85 HASTALIK VERİTABANI (EKSİKSİZ)
+# 4. MASTER 85+ HASTALIK VERİTABANI
 master_db = {
     # KARDİYOLOJİ (1-15)
     "STEMI": {"b": ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Kardiyak İskemi", "Terleme", "Taşikardi"], "t": "EKG + Troponin", "ted": "ASA 300mg + Klopidogrel 600mg + IV Heparin + Acil Anjiyo."},
@@ -180,9 +186,9 @@ master_db = {
 }
 
 # 5. FINAL ANALİZ MOTORU
-if st.button("🚀 ANALİZİ BAŞLAT"):
+if st.button("🚀 ANALİZİ BAŞLAT (V30 TITANIC)"):
     if not b:
-        st.error("Lütfen klinik verileri seçin!")
+        st.error("Klinik veri girişi yapılmadı!")
     else:
         results = []
         for ad, v in master_db.items():
@@ -195,14 +201,12 @@ if st.button("🚀 ANALİZİ BAŞLAT"):
         
         c1, c2 = st.columns([1.8, 1])
         with c1:
-            st.markdown("### 🏛️ Teşhis ve Tedavi Algoritması")
-            if not results:
-                st.warning("Eşleşen tanı bulunamadı.")
+            st.markdown("### 🏛️ Teşhis ve Tedavi Paneli")
             for r in results:
                 st.markdown(f"""
                 <div class='clinical-card'>
                     <div style='font-size:3rem; font-weight:800; color:#000;'>{r['ad']} (%{r['puan']})</div>
-                    <p style='color:#DC2626; font-weight:700;'>TESPİT EDİLEN: {", ".join(r['m'])}</p>
+                    <p style='color:#DC2626; font-weight:700;'>KRİTİK BULGULAR: {", ".join(r['m'])}</p>
                     <hr style='border: 2px solid #DC2626;'>
                     <p>🧪 <b>İleri Tetkik:</b> {r['v']['t']}</p>
                     <p style='background:#FFF4F4; padding:25px; border-radius:30px; border-left:20px solid #DC2626;'>
@@ -212,10 +216,11 @@ if st.button("🚀 ANALİZİ BAŞLAT"):
                 """, unsafe_allow_html=True)
 
         with c2:
-            st.markdown("### 📝 EPİKRİZ RAPORU (V29)")
-            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, Na {na}\neGFR: {egfr} ml/dk\n\nTESPİT EDİLEN SEMPTOMLAR:\n{", ".join(b)}\n\nAYIRICI TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
+            st.markdown("### 📝 EPİKRİZ RAPORU (V30)")
+            # Epikriz metnine cinsiyet ve protokol eklendi
+            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, Na {na}\neGFR (Cinsiyete Duyarlı): {egfr} ml/dk\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
             st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000; font-size:14px; white-space: pre-wrap;'>{epi}</pre>", unsafe_allow_html=True)
-            st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V29.txt")
+            st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V30.txt")
 
 st.markdown("---")
-st.caption("GELİŞTİRİCİ : İSMAİL ORHAN |GEMLİK- 2026")
+st.caption("MASTER ARCHITECT: İSMAİL ORHAN | V30 TITANIC-GENDER | 2026")
