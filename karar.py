@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 
 # 1. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V30 TITANIC-GENDER)
-st.set_page_config(page_title="İSMAİL ORHAN | V30 MASTER", page_icon="💊", layout="wide")
+st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
 
 st.markdown("""
     <style>
@@ -33,7 +33,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN | V30 TITANIC-GENDER</p></div>", unsafe_allow_html=True)
+st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN </p></div>", unsafe_allow_html=True)
 
 # 2. LABORATUVAR TERMİNALİ (CINSIYET EKLENDI)
 with st.sidebar:
@@ -223,4 +223,4 @@ if st.button("🚀 ANALİZİ BAŞLAT (V30 TITANIC)"):
             st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V30.txt")
 
 st.markdown("---")
-st.caption("MASTER ARCHITECT: İSMAİL ORHAN | V30 TITANIC-GENDER | 2026")
+st.caption("GELİŞTİRİCİ: İSMAİL ORHAN GEMLİK 2026")
