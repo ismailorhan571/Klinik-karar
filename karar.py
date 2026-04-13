@@ -89,7 +89,7 @@ st.markdown("""
 st.markdown(f"""
     <div class='main-header'>
         <h1>TIBBİ KARAR ROBOTU</h1>
-        <p>UYGULAMA GEKİŞTİRİCİSİ: İSMAİL ORHAN </p>
+        <p>UYGULAMA GELİŞTİRİCİSİ: İSMAİL ORHAN </p>
     </div>
     """, unsafe_allow_html=True)
 
