@@ -35,7 +35,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN | V25 TITANIC - 100+ HASTALIK</p></div>", unsafe_allow_html=True)
+st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN</p></div>", unsafe_allow_html=True)
 
 # 2. YAN PANEL - LABORATUVAR (BOZULMADI, KORUNDU)
 with st.sidebar:
