@@ -104,4 +104,4 @@ if st.button("ANALİZİ BAŞLAT"):
             sonuc = analiz_et(secilen_belirtiler, yas, ates, ta_sistolik, spo2)
             
             if sonuc["kirmizi"]:
-                st.markdown(f"<div class='alert-box critical'>
+                st.markdown(f"<div class='alert-box critical'>"
