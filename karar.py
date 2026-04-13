@@ -89,5 +89,4 @@ if st.button("KLİNİK ANALİZİ BAŞLAT"):
         with col_sol:
             st.subheader("📋 Diferansiyel Tanı ve Tetkikler")
             st.write("**Olası Ön Tanılar:**")
-            for t in set(sonuc["tanilar"] if sonuc["tanilar"] else ["Dahilî Değerlendirme"]):
-                st.write(
+            for t in set(sonuc["tanilar"] if sonuc["tanilar"] else ["Dahilî Değerlendirme"])
