@@ -218,4 +218,4 @@ if st.button("🚀 ANALİZİ BAŞLAT"):
             st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V29.txt")
 
 st.markdown("---")
-st.caption("GELİŞTİRİCİ : İSMAİL ORHAN |GEMLİL- 2026")
+st.caption("GELİŞTİRİCİ : İSMAİL ORHAN |GEMLİK- 2026")
