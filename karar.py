@@ -8,7 +8,8 @@ def ai_derin_analiz(api_key, analiz_metni, gorsel=None):
     try:
         genai.configure(api_key=api_key)
         # Model ismi en güncel haliyle kontrol edildi
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+
         
         prompt = f"""
         Sen profesyonel bir dâhiliye uzmanı yardımcısısın. 
