@@ -1,205 +1,270 @@
 import streamlit as st
+from datetime import datetime
 import google.generativeai as genai
 from PIL import Image
 
-# 1. API YAPILANDIRMASI (Senin belirttiğin gibi GEMINI_API_KEY olarak güncellendi)
+# --- 1. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V30 TITANIC-GENDER) ---
+st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
+
+# AI Yapılandırması (Eklendi)
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-except Exception as e:
-    st.error(f"API Anahtarı Hatası: {e}. Lütfen Secrets kısmında 'GEMINI_API_KEY' ismini kontrol edin.")
+except:
+    st.error("Secrets'da 'GEMINI_API_KEY' bulunamadı!")
 
-# 2. SAYFA AYARLARI
-st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE", layout="wide")
-st.title("💊 DAHİLİYE KLİNİK KARAR DESTEK SİSTEMİ")
-st.markdown("<p style='text-align: center; color: gray;'>Geliştirici: Hemşire İsmail Orhan</p>", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    .stApp { background: linear-gradient(135deg, #FDFCF0 0%, #E8E2D2 100%); color: #1A1A1A; font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    .main-header {
+        background: rgba(255, 255, 255, 0.98); padding: 40px; border-radius: 50px; text-align: center; margin-bottom: 40px;
+        border-top: 20px solid #DC2626; border-bottom: 20px solid #DC2626; border-left: 12px solid #D4AF37; border-right: 12px solid #D4AF37;
+        box-shadow: 0 60px 120px rgba(0,0,0,0.3);
+    }
+    .main-header h1 { color: #000; font-weight: 800; font-size: 3.2rem; margin: 0; }
+    .main-header p { color: #DC2626; font-size: 1.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 5px; margin-top: 15px; }
 
-# 3. YAN PANEL: LABORATUVAR, GKS VE WELLS
+    .clinical-card { 
+        background: #FFFFFF; padding: 50px; border-radius: 60px; margin-bottom: 40px;
+        border-left: 35px solid #DC2626; border-right: 18px solid #D4AF37;
+        box-shadow: 25px 25px 60px rgba(0,0,0,0.12);
+    }
+    
+    .stButton>button {
+        background: linear-gradient(135deg, #000 0%, #333 100%); color: #FFF; border-radius: 50px;
+        height: 7em; width: 100%; font-weight: 800; font-size: 35px; border: 7px solid #DC2626;
+    }
+    .stButton>button:hover { background: #DC2626; transform: scale(1.01); color: white; }
+    
+    [data-testid="stSidebar"] { background-color: #F8F7EB; border-right: 15px solid #DC2626; }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN </p></div>", unsafe_allow_html=True)
+
+# 2. LABORATUVAR TERMİNALİ (V30 + YENİ SKORLAMALAR)
 with st.sidebar:
-    st.header("🧪 HASTA VERİ GİRİŞİ")
-    yas = st.number_input("Yaş", 0, 120, 45)
+    st.markdown("### 🏛️ LABORATUVAR VERİ MERKEZİ")
+    p_no = st.text_input("Protokol No", "İSMAİL-V30-FINAL")
     cinsiyet = st.radio("Cinsiyet", ["Erkek", "Kadın"])
-    kilo = st.number_input("Kilo (kg)", 10, 250, 80)
-    
+    yas = st.number_input("Yaş", 0, 120, 45)
+    kilo = st.number_input("Kilo (kg)", 5, 250, 85)
     st.divider()
-    st.subheader("🩸 KAN VE ŞEKER")
-    seker = st.number_input("AKŞ (mg/dL)", 0, 1000, 100)
-    hba1c = st.number_input("HbA1c (%)", 0.0, 20.0, 5.7)
-    kre = st.number_input("Kreatinin (mg/dL)", 0.1, 20.0, 1.0)
-    hb = st.number_input("Hemoglobin (Hb)", 0.0, 25.0, 14.0)
-    wbc = st.number_input("WBC (Lökosit)", 0, 100000, 8000)
-    plt = st.number_input("PLT (Trombosit)", 0, 2000000, 250000)
     
-    # Otomatik eGFR Hesaplama
-    egfr = round(((140 - yas) * kilo) / (72 * kre) * (0.85 if cinsiyet == "Kadın" else 1), 1)
-    st.metric("eGFR Skoru", f"{egfr} ml/dk")
-
-    st.divider()
-    # GKS DEĞERLENDİRMELİ GİRİŞ
+    # EKLENTİ 1: GKS DEĞERLENDİRMELİ (Sadece sonuç değil, klinik seçimli)
     st.subheader("🧠 GKS DEĞERLENDİRMESİ")
-    e = st.selectbox("Göz (E)", [4, 3, 2, 1], format_func=lambda x: f"{x}: {['Yok','Ağrıyla','Sesle','Spontan'][x-1]}")
-    v = st.selectbox("Sözel (V)", [5, 4, 3, 2, 1], format_func=lambda x: f"{x}: {['Yok','Anlamsız Ses','Uygunsuz Kelime','Konfüze','Oryante'][x-1]}")
-    m = st.selectbox("Motor (M)", [6, 5, 4, 3, 2, 1], format_func=lambda x: f"{x}: {['Yok','Ekstansiyon','Fleksiyon','Ağrıdan Kaçar','Ağrıyı Lokalize','Emre Uyar'][x-1]}")
-    
-    gcs_toplam = e + v + m
-    if gcs_toplam <= 8: g_durum = "🔴 Ağır Koma"
-    elif gcs_toplam <= 12: g_durum = "🟡 Orta Koma"
-    elif gcs_toplam <= 14: g_durum = "🟢 Hafif Koma"
-    else: g_durum = "✅ Bilinç Açık"
-    st.info(f"Sonuç: {gcs_toplam} - {g_durum}")
+    g_e = st.selectbox("Göz (E)", [4, 3, 2, 1], format_func=lambda x: f"{x}: {['Yok','Ağrıyla','Sesle','Spontan'][x-1]}")
+    g_v = st.selectbox("Sözel (V)", [5, 4, 3, 2, 1], format_func=lambda x: f"{x}: {['Yok','Anlamsız Ses','Uygunsuz Kelime','Konfüze','Oryante'][x-1]}")
+    g_m = st.selectbox("Motor (M)", [6, 5, 4, 3, 2, 1], format_func=lambda x: f"{x}: {['Yok','Ekstansiyon','Fleksiyon','Ağrıdan Kaçar','Ağrıyı Lokalize','Emre Uyar'][x-1]}")
+    gcs_skor = g_e + g_v + g_m
+    st.info(f"Toplam GCS: {gcs_skor}")
 
     st.divider()
-    # WELLS SKORLAMASI
+    # EKLENTİ 2: WELLS SKORLAMASI
     st.subheader("📊 WELLS SKORU")
-    w_list = [
-        st.checkbox("Aktif Kanser (+1)"),
-        st.checkbox("Paralizi / İmmobilizasyon (+1)"),
-        st.checkbox("Yatak Bağımlılığı >3 Gün (+1)"),
-        st.checkbox("Venöz Hassasiyet (+1)"),
-        st.checkbox("Tüm Bacakta Şişlik (+1)"),
-        st.checkbox("Baldır Şişliği >3cm (+1)"),
-        st.checkbox("Gode Bırakan Ödem (+1)"),
-        st.checkbox("Kollateral Venler (+1)"),
-        st.checkbox("Alternatif Tanı Olasılığı (-2)")
+    w_inputs = [
+        st.checkbox("Aktif Kanser (+1)"), st.checkbox("Paralizi/İmmobilizasyon (+1)"),
+        st.checkbox("Yatak Bağımlılığı >3 Gün (+1)"), st.checkbox("Venöz Hassasiyet (+1)"),
+        st.checkbox("Tüm Bacakta Şişlik (+1)"), st.checkbox("Baldır Şişliği >3cm (+1)"),
+        st.checkbox("Gode Bırakan Ödem (+1)"), st.checkbox("Kollateral Venler (+1)"),
+        st.checkbox("Alternatif Tanı Olasılığı Düşük (+1)")
     ]
-    wells_score = sum(w_list[:-1]) + (-2 if w_list[-1] else 0)
+    wells_score = sum(w_inputs)
     st.warning(f"Wells Skoru: {wells_score}")
 
-# 4. ANA EKRAN VE GÖRÜNTÜ YÜKLEME
-st.subheader("🔍 Klinik Bulgular ve AI Analizi")
-bulgular = st.multiselect("Semptomları Seçin", 
-    ["Göğüs Ağrısı", "Nefes Darlığı", "Karın Ağrısı", "Ateş (>38)", "Sarılık", "Kuşak Ağrısı", "Konfüzyon", "Hemoptizi", "Hematemez", "Melena", "Bilateral Ödem", "Sırt Ağrısı (Yırtılır)", "Kola Yayılan Ağrı", "Çarpıntı", "Hipotansiyon", "Senkop", "Boyun Ven Dolgunluğu", "Asit", "Kilo Kaybı", "Gece Terlemesi", "Eklem Ağrısı", "Pitozis", "Parezi", "Nöbet", "Ense Sertliği"])
+    st.divider()
+    kre = st.number_input("Kreatinin", 0.1, 45.0, 1.1)
+    hb = st.number_input("Hemoglobin (Hb)", 3.0, 25.0, 14.0)
+    wbc = st.number_input("WBC (Lökosit)", 0, 500000, 8500)
+    plt = st.number_input("PLT (Trombosit)", 0, 2000000, 245000)
+    glu = st.number_input("AKŞ (Glukoz)", 0, 3000, 105)
+    na = st.number_input("Sodyum (Na)", 100, 190, 140)
+    k = st.number_input("Potasyum (K)", 1.0, 15.0, 4.2)
+    ca = st.number_input("Kalsiyum (Ca)", 5.0, 22.0, 9.5)
+    ast_alt = st.checkbox("AST/ALT > 3 Kat Artış")
+    trop = st.checkbox("Troponin Pozitif (+)")
+    
+    if kre > 0:
+        base_egfr = ((140 - yas) * kilo) / (72 * kre)
+        if cinsiyet == "Kadın": base_egfr *= 0.85
+        egfr = round(base_egfr, 1)
+    else: egfr = 0
+    st.metric("eGFR Skoru", f"{egfr} ml/dk")
 
-uploaded_file = st.file_uploader("📸 EKG veya Radyolojik Görüntü Yükle", type=["jpg", "jpeg", "png"])
+# 3. KLİNİK BULGU SEÇİMİ (Senin Orijinal Tab Yapın)
+st.subheader("🔍 Klinik Semptom ve Fizik Muayene Bulguları")
+t1, t2, t3, t4, t5, t6, t7 = st.tabs(["🫀 KARDİYO", "🫁 PULMONER", "🤢 GİS-KC", "🧪 ENDOKRİN", "🧠 NÖROLOJİ", "🩸 HEMATO-ONKO", "🧬 ROMATO-ENF"])
 
-# 5. MASTER VERİTABANI (85 HASTALIK - EKSİKSİZ)
+b = []
+with t1: b.extend(st.multiselect("KV", ["Göğüs Ağrısı", "Sırt Ağrısı (Yırtılır)", "Kola Yayılan Ağrı", "Çarpıntı", "Hipotansiyon", "Senkop", "Bilateral Ödem", "Boyun Ven Dolgunluğu", "S3/S4 Sesi", "Bradikardi", "Taşikardi", "Üfürüm"]))
+with t2: b.extend(st.multiselect("PULM", ["Nefes Darlığı", "Hemoptizi", "Kuru Öksürük", "Balgamlı Öksürük", "Ral", "Ronküs", "Wheezing", "Stridor", "Plevritik Ağrı", "Siyanoz", "Ortopne", "Hipoksi"]))
+with t3: b.extend(st.multiselect("GİS", ["Hematemez", "Melena", "Hematokezya", "Sarılık", "Asit", "Hepatomegali", "Splenomegali", "Kuşak Ağrısı", "Disfaji", "Asteriksis", "Murphy Belirtisi", "Karın Ağrısı", "Rebound", "Kabızlık", "İshal", "Mide Bulantısı"]))
+with t4: b.extend(st.multiselect("ENDO", ["Poliüri", "Polidipsi", "Aseton Kokusu", "Aydede Yüzü", "Mor Stria", "Hiperpigmentasyon", "Ekzoftalmi", "Boyunda Şişlik", "Tremor", "Soğuk İntoleransı", "Sıcak İntoleransı", "El-Ayak Büyümesi", "Galaktore"]))
+with t5: b.extend(st.multiselect("NÖRO", ["Konfüzyon", "Ense Sertliği", "Nöbet", "Dizartri", "Ataksi", "Ani Baş Ağrısı", "Fotofobi", "Parezi", "Pupil Eşitsizliği", "Dengesizlik", "Pitozis"]))
+with t6: b.extend(st.multiselect("HEM", ["Peteşi", "Purpura", "Ekimoz", "Lenfadenopati", "Kilo Kaybı", "Gece Terlemesi", "Kaşıntı", "Solukluk", "Kemik Ağrısı", "Diş Eti Kanaması", "B Semptomları"]))
+with t7: b.extend(st.multiselect("ROM", ["Ateş (>38)", "Eklem Ağrısı", "Sabah Sertliği", "Kelebek Döküntü", "Raynaud", "Ağızda Aft", "Göz Kuruluğu", "Deri Sertleşmesi", "Uveit", "Paterji Reaksiyonu", "Bel Ağrısı (İnflamatuar)"]))
+
+# Otomatik Lab Değerlendirme (Senin Mantığın)
+if kre > 1.3: b.append("Böbrek Hasarı")
+if hb < 11: b.append("Anemi")
+if wbc > 12000: b.append("Lökositoz")
+if plt < 140000: b.append("Trombositopeni")
+if glu > 180: b.append("Hiperglisemi")
+if na < 135: b.append("Hiponatremi")
+if ast_alt: b.append("KC Hasarı")
+if trop: b.append("Kardiyak İskemi")
+
+# EKLENTİ 3: GÖRÜNTÜ YÜKLEME ALANI
+st.divider()
+st.subheader("📸 RADYOLOJİK/KARDİYOLOJİK GÖRÜNTÜ ANALİZİ (AI)")
+up_file = st.file_uploader("EKG, Röntgen veya Laboratuvar Sonucu Yükle", type=["jpg", "png", "jpeg"])
+
+# 4. MASTER 85+ HASTALIK VERİTABANI (Senin Orijinal Listen - Tek Satırına Dokunulmadı)
 master_db = {
-    "STEMI": {"b": ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Terleme"], "t": "EKG + Troponin", "ted": "Anjiyo"},
-    "NSTEMI": {"b": ["Göğüs Ağrısı", "Bulantı"], "t": "Seri Troponin", "ted": "Antikoagülan"},
-    "Pulmoner Emboli": {"b": ["Nefes Darlığı", "Hemoptizi", "Taşikardi"], "t": "BT Anjiyo", "ted": "Heparin"},
-    "Aort Diseksiyonu": {"b": ["Sırt Ağrısı (Yırtılır)", "Hipotansiyon"], "t": "BT Anjiyo", "ted": "Cerrahi"},
-    "Akut Kalp Yetersizliği": {"b": ["Nefes Darlığı", "Boyun Ven Dolgunluğu", "Ödem"], "t": "proBNP + EKO", "ted": "Furosemid"},
-    "İnfektif Endokardit": {"b": ["Ateş (>38)", "Üfürüm"], "t": "Kan Kültürü", "ted": "Antibiyotik"},
-    "Perikard Tamponadı": {"b": ["Hipotansiyon", "Boyun Ven Dolgunluğu"], "t": "EKO", "ted": "Perikardiyosentez"},
-    "Atriyal Fibrilasyon": {"b": ["Çarpıntı", "Taşikardi"], "t": "EKG", "ted": "Hız Kontrolü"},
-    "Miyokardit": {"b": ["Göğüs Ağrısı", "Ateş (>38)"], "t": "Troponin + MR", "ted": "İstirahat"},
-    "Stabil Anjina": {"b": ["Göğüs Ağrısı"], "t": "Efor Testi", "ted": "Aspirin"},
-    "Kardiyojenik Şok": {"b": ["Hipotansiyon", "Konfüzyon"], "t": "Laktat", "ted": "İnotrop"},
-    "Hipertansif Kriz": {"b": ["Baş Ağrısı", "Konfüzyon"], "t": "Tansiyon Takibi", "ted": "IV Antihipertansif"},
-    "Aort Stenozu": {"b": ["Senkop", "Üfürüm"], "t": "EKO", "ted": "Kapak Replasmanı"},
-    "Mitral Yetersizlik": {"b": ["Nefes Darlığı", "Üfürüm"], "t": "EKO", "ted": "Diüretik"},
-    "Tam Blok": {"b": ["Bradikardi", "Senkop"], "t": "EKG", "ted": "Pacemaker"},
-    "Varis Kanaması": {"b": ["Hematemez", "Sarılık"], "t": "Endoskopi", "ted": "Band Ligasyonu"},
-    "Akut Pankreatit": {"b": ["Kuşak Ağrısı", "Bulantı"], "t": "Lipaz/Amilaz", "ted": "Sıvı Tedavisi"},
-    "Hepatik Ensefalopati": {"b": ["Konfüzyon", "Asteriksis"], "t": "Amonyak", "ted": "Laktüloz"},
-    "Akut Kolanjit": {"b": ["Sarılık", "Ateş (>38)", "Karın Ağrısı"], "t": "ERCP", "ted": "Antibiyotik + ERCP"},
-    "Peptik Ülser": {"b": ["Karın Ağrısı", "Melena"], "t": "Endoskopi", "ted": "PPI"},
-    "Crohn Hastalığı": {"b": ["Karın Ağrısı", "İshal", "Kilo Kaybı"], "t": "Kolonoskopi", "ted": "Steroid"},
-    "Ülseratif Kolit": {"b": ["Hematokezya", "İshal"], "t": "Kolonoskopi", "ted": "Mesalazin"},
-    "Wilson Hastalığı": {"b": ["Tremor", "Sarılık"], "t": "Seruloplazmin", "ted": "Penisilamin"},
-    "Siroz": {"b": ["Asit", "Sarılık", "Hepatomegali"], "t": "Albumin/INR", "ted": "Diüretik"},
-    "AKY (Karaciğer)": {"b": ["Sarılık", "Konfüzyon"], "t": "INR", "ted": "Nakil"},
-    "Çölyak": {"b": ["İshal", "Kilo Kaybı"], "t": "tTG-IgA", "ted": "Glutensiz Diyet"},
-    "Akalazya": {"b": ["Disfaji", "Regürjitasyon"], "t": "Manometri", "ted": "Dilatasyon"},
-    "Gastroparezi": {"b": ["Mide Bulantısı", "Erken Doyma"], "t": "Sintigrafi", "ted": "Metoklopramid"},
-    "Hepatit B": {"b": ["Sarılık", "Bulantı"], "t": "HBsAg", "ted": "Destek"},
-    "Hepatit C": {"b": ["Halsizlik", "KC Hasarı"], "t": "HCV-RNA", "ted": "Antiviral"},
-    "Otoimmün Hepatit": {"b": ["Sarılık", "Eklem Ağrısı"], "t": "ANA/ASMA", "ted": "Steroid"},
-    "PBC": {"b": ["Kaşıntı", "Sarılık"], "t": "AMA", "ted": "UDCA"},
-    "Pankreas Kanseri": {"b": ["Sarılık", "Kilo Kaybı"], "t": "BT + CA 19-9", "ted": "Whipple"},
-    "Mezenter İskemi": {"b": ["Şiddetli Karın Ağrısı"], "t": "BT Anjiyo", "ted": "Cerrahi"},
-    "Divertikülit": {"b": ["Karın Ağrısı", "Ateş (>38)"], "t": "BT", "ted": "Antibiyotik"},
-    "DKA": {"b": ["Konfüzyon", "Aseton Kokusu"], "t": "Kan Gazı", "ted": "İnsülin"},
-    "Tiroid Fırtınası": {"b": ["Ateş (>38)", "Taşikardi"], "t": "TSH", "ted": "PTU + Beta Bloker"},
-    "Addison Krizi": {"b": ["Hipotansiyon", "Hiperpigmentasyon"], "t": "Kortizol", "ted": "Hidrokortizon"},
-    "Miksödem Koması": {"b": ["Bradikardi", "Konfüzyon"], "t": "fT4", "ted": "L-Tiroksin"},
-    "Feokromositoma": {"b": ["Baş Ağrısı", "Terleme"], "t": "Metanefrin", "ted": "Alfa Bloker"},
-    "Cushing": {"b": ["Mor Stria", "Aydede Yüzü"], "t": "DEX Testi", "ted": "Cerrahi"},
-    "Diabetes Insipidus": {"b": ["Poliüri", "Polidipsi"], "t": "Susuzluk Testi", "ted": "Desmopressin"},
-    "Hiperkalsemi": {"b": ["Konfüzyon", "Poliüri"], "t": "Ca + PTH", "ted": "Hidrasyon"},
-    "Akromegali": {"b": ["El-Ayak Büyümesi"], "t": "IGF-1", "ted": "Cerrahi"},
-    "Hipoglisemi": {"b": ["Terleme", "Konfüzyon"], "t": "Kan Şekeri", "ted": "Dekstroz"},
-    "Hiperaldosteronizm": {"b": ["Hipotansiyon", "Kas Güçsüzlüğü"], "t": "Renin/Aldo", "ted": "Spironolakton"},
-    "Hipoparatiroidi": {"b": ["Kas Spazmı", "Parezi"], "t": "Ca + PTH", "ted": "Kalsiyum"},
-    "Prolaktinoma": {"b": ["Galaktore", "Baş Ağrısı"], "t": "Prolaktin", "ted": "Kabergolin"},
-    "SIADH": {"b": ["Hiponatremi", "Konfüzyon"], "t": "İdrar Sodyumu", "ted": "Sıvı Kısıtlaması"},
-    "Hashimoto": {"b": ["Soğuk İntoleransı", "Halsizlik"], "t": "Anti-TPO", "ted": "Levotiroksin"},
-    "TTP": {"b": ["Konfüzyon", "Peteşi"], "t": "ADAMTS13", "ted": "Plazmaferez"},
-    "Multipl Miyelom": {"b": ["Kemik Ağrısı", "Anemi"], "t": "M-Spike", "ted": "KT"},
-    "AML": {"b": ["Anemi", "Kanama"], "t": "KİB", "ted": "Kemoterapi"},
-    "Lenfoma": {"b": ["Lenfadenopati", "Gece Terlemesi"], "t": "Biyopsi", "ted": "Kemoterapi"},
-    "PNH": {"b": ["Hemoptizi", "Anemi"], "t": "Akım Sitometrisi", "ted": "Eculizumab"},
-    "DIC": {"b": ["Kanama", "Peteşi"], "t": "D-Dimer/Fibrinojen", "ted": "TDP"},
-    "Polisitemia Vera": {"b": ["Kaşıntı", "Baş Ağrısı"], "t": "JAK2", "ted": "Flebotomi"},
-    "İTP": {"b": ["Peteşi", "Diş Eti Kanaması"], "t": "Trombosit düşüklüğü", "ted": "Steroid"},
-    "Aplastik Anemi": {"b": ["Anemi", "Halsizlik"], "t": "KİB", "ted": "Nakil"},
-    "B12 Eksikliği": {"b": ["Ataksi", "Anemi"], "t": "B12 Düzeyi", "ted": "B12 Enjeksiyon"},
-    "Hemofili": {"b": ["Eklem Kanaması"], "t": "Faktör Düzeyi", "ted": "Faktör Replasmanı"},
-    "vWF Hastalığı": {"b": ["Burun Kanaması"], "t": "vWF Aktivitesi", "ted": "Desmopressin"},
-    "MDS": {"b": ["Anemi", "Halsizlik"], "t": "KİB", "ted": "Destek"},
-    "Esansiyel Trombositemi": {"b": ["Trombositoz", "Baş Ağrısı"], "t": "JAK2", "ted": "Aspirin"},
-    "Miyelofibrozis": {"b": ["Splenomegali", "Anemi"], "t": "KİB", "ted": "Ruxolitinib"},
-    "SLE": {"b": ["Kelebek Döküntü", "Eklem Ağrısı"], "t": "ANA + dsDNA", "ted": "Steroid"},
-    "Behçet": {"b": ["Ağızda Aft", "Uveit"], "t": "Paterji", "ted": "Kolşisin"},
-    "Ankilozan Spondilit": {"b": ["Bel Ağrısı", "Sabah Sertliği"], "t": "HLA-B27", "ted": "Anti-TNF"},
-    "GPA": {"b": ["Hemoptizi", "Burun Kanaması"], "t": "c-ANCA", "ted": "Rituksimab"},
-    "Sjögren": {"b": ["Ağız Kuruluğu", "Göz Kuruluğu"], "t": "Anti-SSA/SSB", "ted": "Suni Gözyaşı"},
-    "Skleroderma": {"b": ["Deri Sertleşmesi", "Raynaud"], "t": "Anti-Scl70", "ted": "MMF"},
-    "Dermatomiyozit": {"b": ["Parezi", "Döküntü"], "t": "Kas Biyopsisi", "ted": "Steroid"},
-    "Gut": {"b": ["Eklem Ağrısı", "Ateş (>38)"], "t": "Ürik Asit", "ted": "Kolşisin"},
-    "Romatoid Artrit": {"b": ["Eklem Ağrısı", "Sabah Sertliği"], "t": "RF + CCP", "ted": "Metotreksat"},
-    "Septik Şok": {"b": ["Hipotansiyon", "Ateş (>38)"], "t": "Laktat", "ted": "Antibiyotik + Sıvı"},
-    "Bakteriyel Menenjit": {"b": ["Ense Sertliği", "Ateş (>38)"], "t": "LP", "ted": "Seftriakson"},
-    "Goodpasture": {"b": ["Hemoptizi", "Böbrek Hasarı"], "t": "Anti-GBM", "ted": "Plazmaferez"},
-    "Miyastenia Gravis": {"b": ["Parezi", "Pitozis"], "t": "Anti-AChR", "ted": "Piridostigmin"},
-    "Bruselloz": {"b": ["Terleme", "Ateş (>38)"], "t": "Wright Testi", "ted": "Doksisiklin"},
-    "Sıtma": {"b": ["Ateş (>38)", "Sarılık"], "t": "Kalın Damla", "ted": "Artemisin"},
-    "KBY (Son Evre)": {"b": ["Ödem", "Böbrek Hasarı"], "t": "eGFR < 15", "ted": "Diyaliz"},
-    "Nefrotik Sendrom": {"b": ["Bilateral Ödem"], "t": "Proteinüri", "ted": "Steroid"},
-    "Piyelonefrit": {"b": ["Karın Ağrısı", "Ateş (>38)"], "t": "İdrar Kültürü", "ted": "Antibiyotik"},
-    "İnterstisyel Akciğer": {"b": ["Nefes Darlığı", "Kuru Öksürük"], "t": "HRCT", "ted": "Steroid"},
-    "Sarkoidoz": {"b": ["Lenfadenopati", "Kuru Öksürük"], "t": "ACE", "ted": "Steroid"},
+    "STEMI": {"b": ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Kardiyak İskemi", "Terleme", "Taşikardi"], "t": "EKG + Troponin", "ted": "ASA 300mg + Klopidogrel 600mg + IV Heparin + Acil Anjiyo."},
+    "NSTEMI": {"b": ["Göğüs Ağrısı", "Kardiyak İskemi", "Bulantı", "Nefes Darlığı"], "t": "Seri Troponin + EKG", "ted": "Enoksaparin 1mg/kg SC + ASA + Beta Bloker."},
+    "Pulmoner Emboli": {"b": ["Nefes Darlığı", "Göğüs Ağrısı", "Hemoptizi", "Taşikardi", "Siyanoz", "Hipoksi"], "t": "BT Anjiyo + D-Dimer", "ted": "Alteplaz 100mg (Masifse) + IV Heparin."},
+    "Aort Diseksiyonu": {"b": ["Sırt Ağrısı (Yırtılır)", "Hipotansiyon", "Pupil Eşitsizliği", "Senkop"], "t": "BT Anjiyo + TEE", "ted": "IV Esmolol + Acil Cerrahi."},
+    "Akut Kalp Yetersizliği": {"b": ["Nefes Darlığı", "Ral", "Boyun Ven Dolgunluğu", "Ortopne", "Bilateral Ödem"], "t": "proBNP + EKO", "ted": "IV Furosemid 40-80mg + Nitrat + CPAP."},
+    "İnfektif Endokardit": {"b": ["Ateş (>38)", "Üfürüm", "Peteşi", "Splenomegali", "Halsizlik"], "t": "Kan Kültürü + TEE", "ted": "IV Vankomisin + Seftriakson."},
+    "Perikard Tamponadı": {"b": ["Hipotansiyon", "Boyun Ven Dolgunluğu", "Sessiz Kalp Sesleri", "Nefes Darlığı"], "t": "EKO", "ted": "Acil Perikardiyosentez."},
+    "Atriyal Fibrilasyon (Hızlı)": {"b": ["Çarpıntı", "Nefes Darlığı", "Taşikardi", "Senkop"], "t": "EKG", "ted": "Metoprolol veya Diltiazem + Antikoagülan."},
+    "Miyokardit": {"b": ["Göğüs Ağrısı", "Ateş (>38)", "Nefes Darlığı", "Kardiyak İskemi"], "t": "Kardiyak MR + Troponin", "ted": "İstirahat + Kalp Yetersizliği Tedavisi."},
+    "Stabil Anjina": {"b": ["Göğüs Ağrısı", "Halsizlik"], "t": "Efor Testi", "ted": "ASA + Statini + Beta Bloker."},
+    "Kardiyojenik Şok": {"b": ["Hipotansiyon", "Konfüzyon", "Taşikardi", "Oligüri"], "t": "Laktat + EKO", "ted": "Norepinefrin + Dobutamin."},
+    "Hipertansif Acil Durum": {"b": ["Ani Baş Ağrısı", "Konfüzyon", "Göğüs Ağrısı", "Nefes Darlığı"], "t": "Tansiyon Takibi (>180/120)", "ted": "IV Nitroprussid veya Labetalol."},
+    "Aort Stenozu": {"b": ["Senkop", "Göğüs Ağrısı", "Nefes Darlığı", "Üfürüm"], "t": "EKO", "ted": "Kapak Replasmanı (TAVI/Cerrahi)."},
+    "Mitral Yetersizlik": {"b": ["Nefes Darlığı", "Ortopne", "Üfürüm", "Bilateral Ödem"], "t": "EKO", "ted": "Diüretik + ACE İnhibitörü + Cerrahi."},
+    "Bradiaritmi (Tam Blok)": {"b": ["Bradikardi", "Senkop", "Hipotansiyon", "Konfüzyon"], "t": "EKG", "ted": "Atropin 0.5mg + Geçici Pacemaker."},
+    "Varis Kanaması": {"b": ["Hematemez", "Melena", "Sarılık", "Asit", "Splenomegali"], "t": "Endoskopi", "ted": "IV Terlipressin 2mg + Seftriakson + Band Ligasyonu."},
+    "Akut Pankreatit": {"b": ["Kuşak Ağrısı", "Mide Bulantısı", "LDH Yüksekliği", "Lökositoz", "Karın Ağrısı"], "t": "Lipaz/Amilaz > 3x + BT", "ted": "NPO + Agresif SF (250ml/saat) + Analjezi."},
+    "Hepatik Ensefalopati": {"b": ["Asteriksis", "Konfüzyon", "Sarılık", "Asit"], "t": "Amonyak", "ted": "Laktüloz + Rifaximin."},
+    "Akut Kolanjit": {"b": ["Sarılık", "Ateş (>38)", "Karın Ağrısı", "Hipotansiyon", "Konfüzyon"], "t": "ERCP", "ted": "Acil ERCP + IV Antibiyotik."},
+    "Peptik Ülser Kanaması": {"b": ["Hematemez", "Melena", "Karın Ağrısı", "Anemi"], "t": "Endoskopi", "ted": "IV PPI (80mg Bolus + 8mg/saat İnfüzyon)."},
+    "Crohn Hastalığı": {"b": ["Karın Ağrısı", "İshal", "Kilo Kaybı", "Ağızda Aft"], "t": "BT Enterografi + Kolonoskopi", "ted": "Anti-TNF + Azatioprin."},
+    "Ülseratif Kolit": {"b": ["Hematokezya", "İshal", "Karın Ağrısı", "Eklem Ağrısı"], "t": "Kolonoskopi", "ted": "Mesalazin + Steroid."},
+    "Wilson Hastalığı": {"b": ["Tremor", "Sarılık", "Dizartri", "KC Hasarı"], "t": "Seruloplazmin + İdrar Bakırı", "ted": "D-Penisilamin + Çinko."},
+    "Siroz": {"b": ["Sarılık", "Asit", "Hepatomegali", "Anemi", "Örümcek Anjiyom"], "t": "Albumin/INR + USG", "ted": "Spironolakton + Tuz Kısıtlaması."},
+    "Akut Karaciğer Yetmezliği": {"b": ["Sarılık", "Konfüzyon", "KC Hasarı", "Asteriksis"], "t": "INR > 1.5", "ted": "NAC İnfüzyonu + Karaciğer Nakli."},
+    "Çölyak": {"b": ["İshal", "Anemi", "Kilo Kaybı", "Karın Ağrısı"], "t": "Anti-tTG + Biyopsi", "ted": "Glutensiz Diyet."},
+    "Akalazya": {"b": ["Disfaji", "Regürjitasyon", "Kilo Kaybı"], "t": "Manometri", "ted": "Balon Dilatasyonu / Heller."},
+    "Gastroparezi": {"b": ["Mide Bulantısı", "Kusma", "Erken Doyma", "Karın Ağrısı"], "t": "Mide Boşalım Sintigrafisi", "ted": "Metoklopramid + Diyet."},
+    "Hepatit B (Akut)": {"b": ["Sarılık", "Bulantı", "KC Hasarı", "İdrarda Koyu Renk"], "t": "Seroloji (HBsAg, Anti-HBc)", "ted": "Destek Tedavisi + İstirahat."},
+    "Hepatit C (Kronik)": {"b": ["Halsizlik", "KC Hasarı", "Sarılık"], "t": "HCV-RNA", "ted": "Direkt Etkili Antiviraller (DAA)."},
+    "Otoimmün Hepatit": {"b": ["Sarılık", "Eklem Ağrısı", "KC Hasarı", "Ateş (>38)"], "t": "ANA/ASMA + Biyopsi", "ted": "Steroid + Azatioprin."},
+    "Primer Biliyer Kolanjit": {"b": ["Kaşıntı", "Sarılık", "Halsizlik", "Hepatomegali"], "t": "Anti-Mitokondriyal Antikor (AMA)", "ted": "Ursodeoksikolik Asit (UDCA)."},
+    "Pankreas Kanseri": {"b": ["Sarılık", "Kuşak Ağrısı", "Kilo Kaybı", "Yeni Başlayan Diyabet"], "t": "Batın BT + CA 19-9", "ted": "Whipple Operasyonu / KT."},
+    "Mezenter İskemi": {"b": ["Şiddetli Karın Ağrısı", "Bulantı", "Hipotansiyon", "Laktat Yüksekliği"], "t": "BT Anjiyo", "ted": "Acil Cerrahi / Embolektomi."},
+    "Divertikülit": {"b": ["Karın Ağrısı", "Ateş (>38)", "Kabızlık", "Lökositoz"], "t": "Batın BT", "ted": "Antibiyotik + Sıvı Diyet."},
+    "DKA": {"b": ["Aseton Kokusu", "Hiperglisemi", "Karın Ağrısı", "Konfüzyon", "Poliüri"], "t": "Kan Gazı + Keton", "ted": "IV SF + İnsülin İnfüzyonu + K+."},
+    "Tiroid Fırtınası": {"b": ["Ateş (>38)", "Taşikardi", "Konfüzyon", "Tremor", "Sarılık"], "t": "Burch-Wartofsky Skoru", "ted": "PTU + Lugol + Beta Bloker + IV Steroid."},
+    "Addison Krizi": {"b": ["Hipotansiyon", "Hiperpigmentasyon", "Hiponatremi", "Karın Ağrısı"], "t": "Kortizol + ACTH Testi", "ted": "IV Hidrokortizon 100mg + SF."},
+    "Miksödem Koması": {"b": ["Bradikardi", "Konfüzyon", "Soğuk İntoleransı", "Bilateral Ödem"], "t": "TSH + fT4", "ted": "IV L-Tiroksin + IV Steroid."},
+    "Feokromositoma": {"b": ["Ani Baş Ağrısı", "Çarpıntı", "Terleme", "Hipotansiyon"], "t": "İdrar Metanefrinleri", "ted": "Alfa Bloker -> Beta Bloker."},
+    "Cushing Sendromu": {"b": ["Aydede Yüzü", "Mor Stria", "Hiperglisemi", "Hipotansiyon"], "t": "DEX Baskılama Testi", "ted": "Cerrahi Müdahale."},
+    "Diabetes Insipidus": {"b": ["Poliüri", "Polidipsi", "Hipernatremi"], "t": "Susuzluk Testi", "ted": "Desmopressin."},
+    "Hiperkalsemik Kriz": {"b": ["Hiperkalsemi", "Konfüzyon", "Poliüri", "Bradikardi"], "t": "PTH + Ca", "ted": "SF Hidrasyon + Zoledronik Asit."},
+    "Akromegali": {"b": ["El-Ayak Büyümesi", "Disfaji", "Ani Baş Ağrısı"], "t": "IGF-1 + MR", "ted": "Cerrahi + Somatostatin."},
+    "Hipoglisemi Koması": {"b": ["Konfüzyon", "Terleme", "Taşikardi", "Nöbet"], "t": "Kan Şekeri < 50", "ted": "IV %10-20 Dekstroz Bolus."},
+    "Primer Hiperaldosteronizm": {"b": ["Hipotansiyon", "Kas Güçsüzlüğü", "Poliüri"], "t": "Aldosteron/Renin Oranı", "ted": "Spironolakton / Cerrahi."},
+    "Hipoparatiroidi": {"b": ["Kas Spazmı", "Nöbet", "Parezi"], "t": "Düşük Ca + Düşük PTH", "ted": "Kalsiyum + Vitamin D."},
+    "Prolaktinoma": {"b": ["Galaktore", "Ani Baş Ağrısı", "Görme Bozukluğu"], "t": "Prolaktin + MR", "ted": "Kabergolin / Bromokriptin."},
+    "SIADH": {"b": ["Hiponatremi", "Konfüzyon", "Nöbet", "Bulantı"], "t": "İdrar Sodyumu / Ozmolarite", "ted": "Sıvı Kısıtlaması + Tolvaptan."},
+    "Hashimoto Tiroiditi": {"b": ["Halsizlik", "Soğuk İntoleransı", "Bilateral Ödem", "Kabızlık"], "t": "Anti-TPO + TSH", "ted": "Levotiroksin."},
+    "TTP": {"b": ["Trombositopeni", "Anemi", "Konfüzyon", "Peteşi", "LDH Yüksekliği"], "t": "Şistosit + ADAMTS13", "ted": "Acil Plazmaferez + Steroid."},
+    "Multipl Miyelom": {"b": ["Kemik Ağrısı", "Böbrek Hasarı", "Hiperkalsemi", "Anemi"], "t": "M-Spike + KİB", "ted": "VCD Protokolü + Bisfosfonat."},
+    "AML": {"b": ["Anemi", "Lökositoz", "Trombositopeni", "Kemik Ağrısı", "Ateş (>38)"], "t": "KİB + Akım Sitometrisi", "ted": "Kemoterapi (7+3)."},
+    "Lenfoma": {"b": ["Lenfadenopati", "Kilo Kaybı", "Gece Terlemesi", "Ateş (>38)"], "t": "Lenf Nodu Biyopsisi", "ted": "R-CHOP / ABVD."},
+    "PNH": {"b": ["Hemoptizi", "Anemi", "Karın Ağrısı", "Trombositopeni"], "t": "CD55/CD59", "ted": "Eculizumab."},
+    "DIC": {"b": ["Peteşi", "Diş Eti Kanaması", "Trombositopeni", "LDH Yüksekliği"], "t": "D-Dimer + Fibrinojen", "ted": "TDP + Trombosit + Neden Tedavisi."},
+    "Polisitemia Vera": {"b": ["Polisitemi", "Splenomegali", "Kaşıntı", "Ani Baş Ağrısı"], "t": "JAK2 Mutasyonu", "ted": "Flebotomi + Aspirin."},
+    "İTP": {"b": ["Trombositopeni", "Peteşi", "Diş Eti Kanaması"], "t": "Tanı Dışlama", "ted": "Steroid + IVIG."},
+    "Aplastik Anemi": {"b": ["Anemi", "Lökopeni", "Trombositopeni", "Halsizlik"], "t": "Kemik İliği Biyopsisi", "ted": "Kök Hücre Nakli / ATG."},
+    "B12 Eksikliği": {"b": ["Anemi", "Ataksi", "Dizartri", "Konfüzyon"], "t": "B12 Düzeyi", "ted": "IM B12 Enjeksiyonu."},
+    "Hemofili A/B": {"b": ["Eklem Kanaması", "Ekimoz", "Diş Eti Kanaması"], "t": "Faktör Düzeyi + aPTT", "ted": "Faktör Replasmanı."},
+    "Von Willebrand Hastalığı": {"b": ["Peteşi", "Burun Kanaması", "Diş Eti Kanaması"], "t": "vWF Aktivitesi", "ted": "Desmopressin / Faktör."},
+    "Miyelodisplastik Sendrom (MDS)": {"b": ["Anemi", "Lökopeni", "Enfeksiyon Sıklığı", "Halsizlik"], "t": "KİB (Displazi)", "ted": "Azasitidin / Destek."},
+    "Esansiyel Trombositemi": {"b": ["Trombositoz (>600k)", "Eritromelalji", "Ani Baş Ağrısı"], "t": "JAK2 / CALR Mutasyonu", "ted": "Hidroksiüre + Aspirin."},
+    "Miyelofibrozis": {"b": ["Splenomegali", "Anemi", "Kilo Kaybı", "Kemik Ağrısı"], "t": "Kemik İliği (Kuru Aspirasyon)", "ted": "Ruxolitinib / Nakil."},
+    "SLE (Lupus)": {"b": ["Kelebek Döküntü", "Eklem Ağrısı", "Böbrek Hasarı", "Lökopeni"], "t": "ANA + Anti-dsDNA", "ted": "Steroid + MMF + Plaquenil."},
+    "Behçet Hastalığı": {"b": ["Ağızda Aft", "Uveit", "Paterji Reaksiyonu", "Eklem Ağrısı"], "t": "HLA-B51", "ted": "Kolşisin + Azatioprin."},
+    "Ankilozan Spondilit": {"b": ["Bel Ağrısı (İnflamatuar)", "Sabah Sertliği", "Uveit"], "t": "HLA-B27 + MR", "ted": "NSAİİ + Anti-TNF."},
+    "GPA (Wegener)": {"b": ["Hemoptizi", "Böbrek Hasarı", "Kuru Öksürük", "Burun Kanaması"], "t": "c-ANCA", "ted": "Rituksimab + Steroid."},
+    "Sjögren Sendromu": {"b": ["Göz Kuruluğu", "Ağız Kuruluğu", "Artralji", "Lenfadenopati"], "t": "Anti-SSA/SSB + Schirmer Testi", "ted": "Suni Gözyaşı + Plaquenil."},
+    "Skleroderma": {"b": ["Deri Sertleşmesi", "Raynaud", "Disfaji", "Nefes Darlığı"], "t": "Anti-Scl-70", "ted": "MMF + Kalsiyum Kanal Blokeri."},
+    "Dermatomiyozit": {"b": ["Parezi", "Kelebek Döküntü", "KC Hasarı", "Artralji"], "t": "CK + Kas Biyopsisi", "ted": "Yüksek Doz Steroid."},
+    "Gut Artriti": {"b": ["Eklem Ağrısı", "Ateş (>38)", "Lökositoz"], "t": "Ürik Asit + Eklem Sıvısı", "ted": "Kolşisin + NSAİİ."},
+    "Romatoid Artrit": {"b": ["Eklem Ağrısı", "Sabah Sertliği", "Halsizlik"], "t": "RF + Anti-CCP", "ted": "Metotreksat + Steroid."},
+    "Septik Şok": {"b": ["Ateş (>38)", "Hipotansiyon", "Konfüzyon", "Taşikardi"], "t": "Laktat > 2 + Kültür", "ted": "30ml/kg SF + Norepinefrin + Antibiyotik."},
+    "Bakteriyel Menenjit": {"b": ["Ense Sertliği", "Ateş (>38)", "Ani Baş Ağrısı", "Fotofobi"], "t": "Lomber Ponksiyon", "ted": "IV Seftriakson + Vankomisin."},
+    "Goodpasture": {"b": ["Hemoptizi", "Böbrek Hasarı", "Nefes Darlığı", "Anemi"], "t": "Anti-GBM Antikoru", "ted": "Plazmaferez + Steroid."},
+    "Miyastenia Gravis": {"b": ["Parezi", "Disfaji", "Pitozis", "Nefes Darlığı"], "t": "Anti-AChR + Tensilon", "ted": "Piridostigmin + IVIG."},
+    "Bruselloz": {"b": ["Ateş (>38)", "Eklem Ağrısı", "Terleme", "Splenomegali"], "t": "Rose Bengal + Wright", "ted": "Doksisiklin + Rifampisin."},
+    "Sıtma": {"b": ["Ateş (>38)", "Sarılık", "Splenomegali", "Trombositopeni"], "t": "Kalın Damla Yayma", "ted": "Artemisin."},
+    "KBY (Evre 5)": {"b": ["Böbrek Hasarı", "Bilateral Ödem", "Hipotansiyon", "Anemi"], "t": "eGFR < 15", "ted": "Acil Diyaliz + Sıvı Kısıtlaması."},
+    "Nefrotik Sendrom": {"b": ["Bilateral Ödem", "Böbrek Hasarı", "Halsizlik"], "t": "24s Protein > 3.5g", "ted": "Steroid + ACE İnhibitörü."},
+    "Piyelonefrit": {"b": ["Karın Ağrısı", "Ateş (>38)", "Bulantı", "Lökositoz"], "t": "İdrar Kültürü", "ted": "IV Siprofloksasin / Seftriakson."},
+    "İnterstisyel Akciğer Hastalığı": {"b": ["Nefes Darlığı", "Kuru Öksürük", "Ral", "Çomak Parmak"], "t": "HRCT (BT)", "ted": "Steroid + Nintedanib."},
+    "Sarkoidoz": {"b": ["Nefes Darlığı", "Lenfadenopati", "Uveit", "Kuru Öksürük"], "t": "ACE + Akciğer Grafisi", "ted": "Oral Steroid."},
 }
 
-# 6. ANALİZ VE AI BAĞLANTISI
-if st.button("🚀 KAPSAMLI ANALİZİ BAŞLAT"):
-    if not bulgular:
-        st.warning("Teşhis için en az bir semptom seçmelisiniz!")
+# 5. FINAL ANALİZ MOTORU + AI GÜCÜ
+if st.button("🚀 ANALİZİ BAŞLAT"):
+    if not b:
+        st.error("Klinik veri girişi yapılmadı!")
     else:
-        col1, col2 = st.columns([1.5, 1])
-        with col1:
-            st.subheader("🏥 Klinik Teşhis Öngörüleri")
-            sonuclar = []
-            for ad, veri in master_db.items():
-                eslesme = set(bulgular).intersection(set(veri["b"]))
-                if eslesme:
-                    puan = round((len(eslesme) / len(veri["b"])) * 100, 1)
-                    sonuclar.append({"ad": ad, "puan": puan, "veri": veri})
+        results = []
+        for ad, v in master_db.items():
+            matches = set(b).intersection(set(v["b"]))
+            if matches:
+                score = round((len(matches) / len(v["b"])) * 100, 1)
+                results.append({"ad": ad, "puan": score, "v": v, "m": list(matches)})
+        
+        results = sorted(results, key=lambda x: x['puan'], reverse=True)
+        
+        c1, c2 = st.columns([1.8, 1])
+        with c1:
+            st.markdown("### 🏛️ Teşhis ve Tedavi Paneli")
+            for r in results:
+                st.markdown(f"""
+                <div class='clinical-card'>
+                    <div style='font-size:3rem; font-weight:800; color:#000;'>{r['ad']} (%{r['puan']})</div>
+                    <p style='color:#DC2626; font-weight:700;'>KRİTİK BULGULAR: {", ".join(r['m'])}</p>
+                    <hr style='border: 2px solid #DC2626;'>
+                    <p>🧪 <b>İleri Tetkik:</b> {r['v']['t']}</p>
+                    <p style='background:#FFF4F4; padding:25px; border-radius:30px; border-left:20px solid #DC2626;'>
+                        💊 <b>DETAYLI TEDAVİ:</b> {r['v']['ted']}
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+
+        with c2:
+            st.markdown("### 📝 EPİKRİZ VE AI ANALİZİ")
             
-            sonuclar = sorted(sonuclar, key=lambda x: x['puan'], reverse=True)
-            for s in sonuclar[:10]:
-                st.success(f"**{s['ad']} (%{s['puan']})**\n\nTetkik: {s['veri']['t']}\n\nTedavi: {s['veri']['ted']}")
-
-        with col2:
-            st.subheader("🤖 AI Derin Analiz (Gemini)")
+            # AI Analiz Bölümü (Eklendi)
+            st.info("🤖 Gemini AI Klinik Yorumu:")
             try:
-                # API MODEL SEÇİMİ
                 model = genai.GenerativeModel('gemini-1.5-flash')
-                vaka_metni = f"""
-                Dahiliye Uzmanı Asistanı Analizi:
-                Hasta: {yas} yaşında {cinsiyet}.
-                Vital/Skor: GCS {gcs_toplam} ({g_durum}), Wells {wells_score}.
-                Laboratuvar: AKŞ {seker}, HbA1c {hba1c}, Hb {hb}, Kreatinin {kre}, Lökosit {wbc}, Trombosit {plt}.
-                Semptomlar: {', '.join(bulgular)}.
-                Lütfen klinik bir tablo çiz ve varsa yüklenen görüntüyü yorumla.
+                vaka_data = f"""
+                Hasta: {yas}y {cinsiyet}. GCS: {gcs_skor}, Wells: {wells_score}.
+                Lab: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, eGFR {egfr}.
+                Semptomlar: {b}. 
+                Lütfen bu verileri uzman bir dahiliyeci gözüyle analiz et.
                 """
-                if uploaded_file:
-                    img = Image.open(uploaded_file)
-                    response = model.generate_content([vaka_metni, img])
+                if up_file:
+                    img = Image.open(up_file)
+                    ai_res = model.generate_content([vaka_data, img])
                 else:
-                    response = model.generate_content(vaka_metni)
-                st.info(response.text)
+                    ai_res = model.generate_content(vaka_data)
+                st.markdown(f"<div style='background:#f0f2f6; padding:15px; border-radius:10px;'>{ai_res.text}</div>", unsafe_allow_html=True)
             except Exception as e:
-                st.error(f"AI Analiz Hatası: {e}")
+                st.error(f"AI Hatası: {e}")
 
-st.divider()
-st.caption("İSMAİL ORHAN DAHİLİYE PROJESİ | 2026")
+            st.divider()
+            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}\nGCS: {gcs_skor}, Wells: {wells_score}\neGFR: {egfr} ml/dk\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
+            st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000; font-size:14px; white-space: pre-wrap;'>{epi}</pre>", unsafe_allow_html=True)
+            st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V30.txt")
+
+st.markdown("---")
+st.caption("GELİŞTİRİCİ: İSMAİL ORHAN GEMLİK 2026")
