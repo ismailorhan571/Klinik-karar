@@ -1,19 +1,30 @@
 import streamlit as st
 import google.generativeai as genai
-
-# API Anahtarını al
-api_key = st.secrets["GEMINI_API_KEY"]
-genai.configure(api_key=api_key)
-
-# KRİTİK DEĞİŞİKLİK: 
-# Model isminin sonuna '-latest' ekle ve 
-# sistemin v1beta kullanmasını engellemek için model nesnesini böyle oluştur:
-model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash-latest')
-
 from PIL import Image
 from datetime import datetime
 
+# 1. API Ayarları (Secrets'tan güvenli alım)
+if "GEMINI_API_KEY" in st.secrets:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=api_key)
+else:
+    st.error("API Anahtarı bulunamadı! Lütfen Secrets panelini kontrol edin.")
+
+# 2. Model Tanımlama (En güncel ve stabil versiyon)
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
+
+# --- AI ANALİZ MOTORU ---
+def ai_derin_analiz(analiz_metni, gorsel=None):
+    try:
+        # Görsel varsa metinle birlikte, yoksa sadece metinle sorgu gönder
+        if gorsel:
+            response = model.generate_content([analiz_metni, gorsel])
+        else:
+            response = model.generate_content(analiz_metni)
+        return response.text
+    except Exception as e:
+        return f"AI Analiz Hatası: {str(e)} "
+        
 # --- AI ANALİZ MOTORU (GÜNCELLENDİ) ---
 def ai_derin_analiz(api_key, analiz_metni, gorsel=None):
     try:
