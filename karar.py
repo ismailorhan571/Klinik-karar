@@ -1,24 +1,24 @@
 import streamlit as st
 from datetime import datetime
-import google.generativeai as genai
 from PIL import Image
+from google import genai   # ✅ YENİ SDK
 
 # --- CONFIG ---
-st.set_page_config(page_title="DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
+st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
 
-# --- API KEY ---
+# --- API ---
 try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 except:
-    st.error("GEMINI_API_KEY bulunamadı!")
+    st.error("Secrets'da GEMINI_API_KEY yok!")
 
 # --- HEADER ---
-st.title("🏥 Dahiliye Klinik Karar Robotu")
+st.title("🏥 DAHİLİYE KLİNİK KARAR ROBOTU")
 
 # --- SIDEBAR ---
 with st.sidebar:
     yas = st.number_input("Yaş", 0, 120, 45)
-    cinsiyet = st.selectbox("Cinsiyet", ["Erkek", "Kadın"])
+    cinsiyet = st.radio("Cinsiyet", ["Erkek", "Kadın"])
     hb = st.number_input("Hb", 3.0, 25.0, 14.0)
     wbc = st.number_input("WBC", 0, 500000, 8500)
     plt = st.number_input("PLT", 0, 2000000, 245000)
@@ -26,28 +26,23 @@ with st.sidebar:
 
 # --- SEMPTOM ---
 b = st.multiselect("Semptomlar", [
-    "Göğüs Ağrısı", "Nefes Darlığı", "Ateş (>38)", "Hipotansiyon",
-    "Taşikardi", "Konfüzyon", "Öksürük"
+    "Göğüs Ağrısı", "Nefes Darlığı", "Ateş (>38)",
+    "Hipotansiyon", "Taşikardi", "Konfüzyon", "Öksürük"
 ])
 
 # --- IMAGE ---
 up_file = st.file_uploader("Görüntü yükle", type=["jpg", "png", "jpeg"])
 
-# --- ANALYZE ---
-if st.button("🚀 ANALİZ"):
+# --- ANALİZ ---
+if st.button("🚀 ANALİZİ BAŞLAT"):
+
     if not b:
         st.error("Semptom seç!")
     else:
-        st.subheader("🤖 AI Klinik Yorum")
+        st.markdown("### 📝 EPİKRİZ VE AI ANALİZİ")
+        st.info("🤖 Gemini AI Klinik Yorumu:")
 
         try:
-            # ✅ MODEL FALLBACK
-            try:
-                model = genai.GenerativeModel("gemini-1.5-flash-latest")
-            except:
-                model = genai.GenerativeModel("gemini-1.5-pro-latest")
-
-            # ✅ GELİŞMİŞ PROMPT
             vaka_data = f"""
             SEN BİR DAHİLİYE UZMANISIN.
 
@@ -71,43 +66,43 @@ if st.button("🚀 ANALİZ"):
             KISA ve NET yaz.
             """
 
-            # ✅ GÖRSEL DESTEK
+            # ✅ GÖRSEL VARSA
             if up_file:
-                image_bytes = up_file.getvalue()
+                img = Image.open(up_file)
 
-                ai_res = model.generate_content({
-                    "parts": [
-                        {"text": vaka_data},
-                        {
-                            "inline_data": {
-                                "mime_type": "image/jpeg",
-                                "data": image_bytes
-                            }
-                        }
-                    ]
-                })
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=[vaka_data, img]
+                )
             else:
-                ai_res = model.generate_content(vaka_data)
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=vaka_data
+                )
 
             st.success("Analiz tamamlandı")
-            st.write(ai_res.text)
+            st.markdown(
+                f"<div style='background:#f0f2f6; padding:20px; border-radius:15px;'>"
+                f"{response.text}</div>",
+                unsafe_allow_html=True
+            )
 
         except Exception as e:
-            st.error(f"Hata: {e}")
+            st.error(f"AI Hatası: {e}")
 
 # --- EPİKRİZ ---
 st.divider()
 
 epi = f"""
-DAHİLİYE RAPORU
-------------------------
-Tarih: {datetime.now().strftime('%d/%m/%Y %H:%M')}
-Hasta: {yas} / {cinsiyet}
+DAHİLİYE KLİNİK RAPORU
+---------------------------
+TARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+HASTA: {yas} / {cinsiyet}
 
 LAB:
 Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}
 
-Semptomlar:
+SEMPTOMLAR:
 {b}
 """
 
