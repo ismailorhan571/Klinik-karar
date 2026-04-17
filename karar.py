@@ -245,7 +245,7 @@ if st.button("🚀 ANALİZİ BAŞLAT"):
             # AI Analiz Bölümü (Eklendi)
             st.info("🤖 Gemini AI Klinik Yorumu:")
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 vaka_data = f"""
                 Hasta: {yas}y {cinsiyet}. GCS: {gcs_skor}, Wells: {wells_score}.
                 Lab: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, eGFR {egfr}.
