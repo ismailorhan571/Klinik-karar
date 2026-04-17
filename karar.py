@@ -9,7 +9,7 @@ try:
 except:
     st.error("Lütfen Streamlit Secrets kısmına GOOGLE_API_KEY ekleyin!")
 
-# 2. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V32 FULL)
+# 2. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V32 FULL - STABLE)
 st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
 
 st.markdown("""
@@ -43,7 +43,7 @@ st.markdown("""
 
 st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN </p></div>", unsafe_allow_html=True)
 
-# 3. LABORATUVAR VE SKORLAMA (WELLS & GCS EKLENDİ)
+# 3. LABORATUVAR VE SKORLAMA
 with st.sidebar:
     st.markdown("### 🏛️ LABORATUVAR VERİ MERKEZİ")
     p_no = st.text_input("Protokol No", "İSMAİL-V32-AI")
@@ -55,7 +55,6 @@ with st.sidebar:
     st.markdown("### 📊 ÖZEL SKORLAMALAR")
     gcs = st.slider("GCS (Glaskow Koma Skoru)", 3, 15, 15)
     
-    # Wells Skorlama Verileri
     w1 = st.checkbox("Aktif Kanser (+1)")
     w2 = st.checkbox("Paralizi / İmmobilizasyon (+1)")
     w3 = st.checkbox("Yatak Bağımlılığı >3 Gün / Cerrahi <12 Hafta (+1)")
@@ -74,7 +73,6 @@ with st.sidebar:
     hb = st.number_input("Hemoglobin (Hb)", 3.0, 25.0, 14.0)
     wbc = st.number_input("WBC (Lökosit)", 0, 500000, 8500)
     plt = st.number_input("PLT (Trombosit)", 0, 2000000, 245000)
-    glu = st.number_input("AKŞ (Glukoz)", 0, 3000, 105)
     na = st.number_input("Sodyum (Na)", 100, 190, 140)
     ast_alt = st.checkbox("AST/ALT > 3 Kat Artış")
     trop = st.checkbox("Troponin Pozitif (+)")
@@ -86,7 +84,7 @@ with st.sidebar:
     else: egfr = 0
     st.metric("eGFR Skoru", f"{egfr} ml/dk")
 
-# 4. GÖRÜNTÜ YÜKLEME (VISION)
+# 4. GÖRÜNTÜ YÜKLEME
 st.subheader("📸 Radyolojik Analiz (EKG / Akciğer Grafisi)")
 uploaded_image = st.file_uploader("Görüntü Analizi İçin Dosya Seçin", type=["jpg", "png", "jpeg"])
 if uploaded_image:
@@ -112,7 +110,7 @@ if wbc > 12000: b.append("Lökositoz")
 if ast_alt: b.append("KC Hasarı")
 if trop: b.append("Kardiyak İskemi")
 
-# 6. MASTER VERİTABANI (TÜM LİSTE KORUNDU)
+# 6. MASTER VERİTABANI (KORUNDU)
 master_db = {
     "STEMI": {"b": ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Kardiyak İskemi", "Terleme", "Taşikardi"], "t": "EKG + Troponin", "ted": "ASA 300mg + Klopidogrel 600mg + IV Heparin + Acil Anjiyo."},
     "NSTEMI": {"b": ["Göğüs Ağrısı", "Kardiyak İskemi", "Bulantı", "Nefes Darlığı"], "t": "Seri Troponin + EKG", "ted": "Enoksaparin 1mg/kg SC + ASA + Beta Bloker."},
@@ -235,7 +233,8 @@ if st.button("🚀 ANALİZİ VE AI RAPORUNU BAŞLAT"):
             st.markdown("### 🤖 GEMINI AI DERİN ANALİZ")
             with st.spinner("AI Görüntü ve Verileri İnceliyor..."):
                 try:
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    # KRİTİK DÜZELTME: Model yolu tam isimlendirme ile güncellendi
+                    model = genai.GenerativeModel('models/gemini-1.5-flash')
                     prompt = f"""
                     Sen profesyonel bir Dahiliye Uzmanısın.
                     Hasta Verileri: Yaş {yas}, Cinsiyet {cinsiyet}, eGFR {egfr}, Wells Skoru {wells_score}, GCS {gcs}.
@@ -254,7 +253,7 @@ if st.button("🚀 ANALİZİ VE AI RAPORUNU BAŞLAT"):
                     
                     st.info(response.text)
                 except Exception as e:
-                    st.error(f"AI Hatası: {e}")
+                    st.error(f"AI Bağlantı Hatası: {e}. Lütfen Python versiyonunu 3.11 veya 3.12 yaparak tekrar deneyin.")
 
             st.markdown("### 📝 EPİKRİZ RAPORU")
             epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, Na {na}\neGFR: {egfr} | Wells: {wells_score} | GCS: {gcs}\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
