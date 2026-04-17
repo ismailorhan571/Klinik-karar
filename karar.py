@@ -1,5 +1,16 @@
 import streamlit as st
 import google.generativeai as genai
+
+# API Anahtarını al
+api_key = st.secrets["GEMINI_API_KEY"]
+genai.configure(api_key=api_key)
+
+# KRİTİK DEĞİŞİKLİK: 
+# Model isminin sonuna '-latest' ekle ve 
+# sistemin v1beta kullanmasını engellemek için model nesnesini böyle oluştur:
+model = genai.GenerativeModel(
+    model_name='gemini-1.5-flash-latest')
+
 from PIL import Image
 from datetime import datetime
 
