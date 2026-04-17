@@ -1,84 +1,73 @@
 import streamlit as st
-from datetime import datetime
 import google.generativeai as genai
 from PIL import Image
 
-# API YAPILANDIRMASI
+# 1. API YAPILANDIRMASI
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 except:
-    st.error("Secrets hatası! Lütfen API Key'i kontrol edin.")
+    st.error("Lütfen Streamlit Secrets kısmına GOOGLE_API_KEY ekleyin!")
 
-# UI AYARLARI
+# 2. UI VE TASARIM
 st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
 
 st.markdown("""
     <style>
-    .main-header {
-        background: white; padding: 30px; border-radius: 20px; text-align: center; margin-bottom: 20px;
-        border-top: 10px solid #DC2626; border-bottom: 10px solid #DC2626; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    .clinical-card { 
-        background: white; padding: 25px; border-radius: 20px; margin-bottom: 20px;
-        border-left: 15px solid #DC2626; box-shadow: 5px 5px 15px rgba(0,0,0,0.05);
-    }
+    .main-header { background: white; padding: 25px; border-radius: 20px; text-align: center; border-bottom: 10px solid #DC2626; }
+    .clinical-card { background: #FFFFFF; padding: 25px; border-radius: 20px; margin-bottom: 20px; border-left: 20px solid #DC2626; box-shadow: 5px 5px 15px rgba(0,0,0,0.1); }
     </style>
     """, unsafe_allow_html=True)
 
 st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN</p></div>", unsafe_allow_html=True)
 
-# SIDEBAR - VERİ GİRİŞİ (GCS & WELLS DAHİL)
+# 3. VERİ GİRİŞİ (WELLS VE GCS EKLENDİ)
 with st.sidebar:
-    st.header("📋 HASTA VERİLERİ")
-    p_no = st.text_input("Protokol No", "İSMAİL-AI-V32")
+    st.header("📋 HASTA PARAMETRELERİ")
+    p_no = st.text_input("Protokol No", "İSMAİL-V32")
     yas = st.number_input("Yaş", 0, 120, 45)
     cinsiyet = st.radio("Cinsiyet", ["Erkek", "Kadın"])
-    kilo = st.number_input("Kilo (kg)", 10, 200, 80)
+    kilo = st.number_input("Kilo (kg)", 10, 250, 80)
     
     st.divider()
     st.subheader("📊 SKORLAMALAR")
+    # GKS (Glaskow Koma Skoru)
     gcs = st.slider("GCS (Glaskow Koma Skoru)", 3, 15, 15)
     
-    # Wells Skorlama Mantığı
-    w_list = [
-        st.checkbox("Aktif Kanser (+1)"),
-        st.checkbox("Paralizi / İmmobilizasyon (+1)"),
-        st.checkbox("Yatak Bağımlılığı >3 Gün (+1)"),
-        st.checkbox("Venöz Hassasiyet (+1)"),
-        st.checkbox("Bacakta Şişlik (+1)"),
-        st.checkbox("Baldır Şişliği >3cm (+1)"),
-        st.checkbox("Gode Bırakan Ödem (+1)"),
-        st.checkbox("Kollateral Venler (+1)")
-    ]
-    w_eksi = st.checkbox("Alternatif Tanı Olasılığı (-2)")
-    wells_score = sum(w_list) + (-2 if w_eksi else 0)
-    st.metric("Wells Skoru", wells_score)
-
+    # Wells Skorlama
+    w_puan = 0
+    if st.checkbox("Aktif Kanser (+1)"): w_puan += 1
+    if st.checkbox("Paralizi / İmmobilizasyon (+1)"): w_puan += 1
+    if st.checkbox("Yatak Bağımlılığı >3 Gün (+1)"): w_puan += 1
+    if st.checkbox("Venöz Hassasiyet (+1)"): w_puan += 1
+    if st.checkbox("Tüm Bacakta Şişlik (+1)"): w_puan += 1
+    if st.checkbox("Baldır Şişliği >3cm (+1)"): w_puan += 1
+    if st.checkbox("Gode Bırakan Ödem (+1)"): w_puan += 1
+    if st.checkbox("Kollateral Venler (+1)"): w_puan += 1
+    if st.checkbox("Alternatif Tanı Olasılığı (-2)"): w_puan -= 2
+    
+    st.metric("Wells Skoru", w_puan)
+    
     st.divider()
     kre = st.number_input("Kreatinin", 0.1, 10.0, 1.0)
-    hb = st.number_input("Hb", 5.0, 20.0, 14.0)
-    wbc = st.number_input("WBC", 0, 50000, 8000)
-    plt = st.number_input("PLT", 0, 1000000, 250000)
-    
     egfr = round(((140 - yas) * kilo) / (72 * kre) * (0.85 if cinsiyet == "Kadın" else 1), 1)
-    st.metric("eGFR", f"{egfr} ml/dk")
+    st.metric("eGFR Skoru", f"{egfr} ml/dk")
 
-# GÖRÜNTÜ YÜKLEME
-uploaded_file = st.file_uploader("📸 EKG veya Röntgen Yükle", type=["jpg", "jpeg", "png"])
+# 4. GÖRÜNTÜ YÜKLEME (AI İÇİN)
+uploaded_file = st.file_uploader("📸 Görüntü (EKG/Röntgen) Analizi", type=["jpg", "jpeg", "png"])
 
-# SEMPTOM SEÇİMİ (TÜM GRUPLAR)
-st.subheader("🔍 Klinik Bulgular")
-t1, t2, t3, t4, t5, t6, t7 = st.tabs(["🫀 KARDİYO", "🫁 PULM", "🤢 GİS", "🧪 ENDO", "🧠 NÖRO", "🩸 HEM", "🧬 ROM"])
-b = []
-with t1: b.extend(st.multiselect("Bulgu", ["Göğüs Ağrısı", "Sırt Ağrısı (Yırtılır)", "Kola Yayılan Ağrı", "Çarpıntı", "Hipotansiyon", "Senkop", "Bilateral Ödem", "Boyun Ven Dolgunluğu", "S3/S4 Sesi", "Bradikardi", "Taşikardi", "Üfürüm"]))
-with t2: b.extend(st.multiselect("Bulgu ", ["Nefes Darlığı", "Hemoptizi", "Kuru Öksürük", "Balgamlı Öksürük", "Ral", "Ronküs", "Wheezing", "Stridor", "Plevritik Ağrı", "Siyanoz", "Ortopne", "Hipoksi"]))
-with t3: b.extend(st.multiselect("Bulgu  ", ["Hematemez", "Melena", "Hematokezya", "Sarılık", "Asit", "Hepatomegali", "Splenomegali", "Kuşak Ağrısı", "Disfaji", "Asteriksis", "Murphy Belirtisi", "Karın Ağrısı", "Rebound", "Kabızlık", "İshal", "Mide Bulantısı"]))
-with t4: b.extend(st.multiselect("Bulgu   ", ["Poliüri", "Polidipsi", "Aseton Kokusu", "Aydede Yüzü", "Mor Stria", "Hiperpigmentasyon", "Ekzoftalmi", "Boyunda Şişlik", "Tremor", "Soğuk İntoleransı", "Sıcak İntoleransı", "El-Ayak Büyümesi", "Galaktore"]))
-with t5: b.extend(st.multiselect("Bulgu    ", ["Konfüzyon", "Ense Sertliği", "Nöbet", "Dizartri", "Ataksi", "Ani Baş Ağrısı", "Fotofobi", "Parezi", "Pupil Eşitsizliği", "Dengesizlik", "Pitozis"]))
-with t6: b.extend(st.multiselect("Bulgu     ", ["Peteşi", "Purpura", "Ekimoz", "Lenfadenopati", "Kilo Kaybı", "Gece Terlemesi", "Kaşıntı", "Solukluk", "Kemik Ağrısı", "Diş Eti Kanaması", "B Semptomları"]))
-with t7: b.extend(st.multiselect("Bulgu      ", ["Ateş (>38)", "Eklem Ağrısı", "Sabah Sertliği", "Kelebek Döküntü", "Raynaud", "Ağızda Aft", "Göz Kuruluğu", "Deri Sertleşmesi", "Uveit", "Paterji Reaksiyonu", "Bel Ağrısı (İnflamatuar)"]))
+# 5. SEMPTOM SEÇİCİ
+st.subheader("🔍 Klinik Bulguları Seçin")
+tabs = st.tabs(["🫀 KARDİYO", "🫁 PULM", "🤢 GİS", "🧪 ENDO", "🧠 NÖRO", "🩸 HEM", "🧬 ROM"])
+secilenler = []
+with tabs[0]: secilenler.extend(st.multiselect("KV", ["Göğüs Ağrısı", "Sırt Ağrısı (Yırtılır)", "Kola Yayılan Ağrı", "Çarpıntı", "Hipotansiyon", "Senkop", "Bilateral Ödem", "Boyun Ven Dolgunluğu", "S3/S4 Sesi", "Bradikardi", "Taşikardi", "Üfürüm"]))
+with tabs[1]: secilenler.extend(st.multiselect("PULM", ["Nefes Darlığı", "Hemoptizi", "Kuru Öksürük", "Balgamlı Öksürük", "Ral", "Ronküs", "Wheezing", "Stridor", "Plevritik Ağrı", "Siyanoz", "Ortopne", "Hipoksi"]))
+with tabs[2]: secilenler.extend(st.multiselect("GİS", ["Hematemez", "Melena", "Hematokezya", "Sarılık", "Asit", "Hepatomegali", "Splenomegali", "Kuşak Ağrısı", "Disfaji", "Asteriksis", "Murphy Belirtisi", "Karın Ağrısı", "Rebound", "Kabızlık", "İshal", "Mide Bulantısı"]))
+with tabs[3]: secilenler.extend(st.multiselect("ENDO", ["Poliüri", "Polidipsi", "Aseton Kokusu", "Aydede Yüzü", "Mor Stria", "Hiperpigmentasyon", "Ekzoftalmi", "Boyunda Şişlik", "Tremor", "Soğuk İntoleransı", "Sıcak İntoleransı", "El-Ayak Büyümesi", "Galaktore"]))
+with tabs[4]: secilenler.extend(st.multiselect("NÖRO", ["Konfüzyon", "Ense Sertliği", "Nöbet", "Dizartri", "Ataksi", "Ani Baş Ağrısı", "Fotofobi", "Parezi", "Pupil Eşitsizliği", "Dengesizlik", "Pitozis"]))
+with tabs[5]: secilenler.extend(st.multiselect("HEM", ["Peteşi", "Purpura", "Ekimoz", "Lenfadenopati", "Kilo Kaybı", "Gece Terlemesi", "Kaşıntı", "Solukluk", "Kemik Ağrısı", "Diş Eti Kanaması", "B Semptomları"]))
+with tabs[6]: secilenler.extend(st.multiselect("ROM", ["Ateş (>38)", "Eklem Ağrısı", "Sabah Sertliği", "Kelebek Döküntü", "Raynaud", "Ağızda Aft", "Göz Kuruluğu", "Deri Sertleşmesi", "Uveit", "Paterji Reaksiyonu", "Bel Ağrısı (İnflamatuar)"]))
 
-# 85 HASTALIK MASTER VERİTABANI (HİÇBİR DEĞİŞİKLİK YAPILMADI)
+# 6. SENİN 85 HASTALIK MASTER LİSTEN (Eksiksiz Korumalı)
 master_db = {
     "STEMI": {"b": ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Kardiyak İskemi", "Terleme", "Taşikardi"], "t": "EKG + Troponin", "ted": "ASA 300mg + Klopidogrel 600mg + IV Heparin + Acil Anjiyo."},
     "NSTEMI": {"b": ["Göğüs Ağrısı", "Kardiyak İskemi", "Bulantı", "Nefes Darlığı"], "t": "Seri Troponin + EKG", "ted": "Enoksaparin 1mg/kg SC + ASA + Beta Bloker."},
@@ -167,52 +156,50 @@ master_db = {
     "Sarkoidoz": {"b": ["Nefes Darlığı", "Lenfadenopati", "Uveit", "Kuru Öksürük"], "t": "ACE + Akciğer Grafisi", "ted": "Oral Steroid."},
 }
 
-# ANALİZ BUTONU
-if st.button("🚀 ANALİZİ BAŞLAT"):
-    if not b:
-        st.warning("Lütfen en az bir bulgu seçin.")
+# 7. ANALİZ VE AI MOTORU
+if st.button("🚀 TEŞHİS VE AI ANALİZİ BAŞLAT"):
+    if not secilenler:
+        st.error("Lütfen klinik bir bulgu seçin!")
     else:
-        # Puanlama Mantığı
-        sonuclar = []
-        for ad, veri in master_db.items():
-            eslesme = set(b).intersection(set(veri["b"]))
-            if eslesme:
-                puan = round((len(eslesme) / len(veri["b"])) * 100, 1)
-                sonuclar.append({"ad": ad, "puan": puan, "detay": veri, "eslesen": list(eslesme)})
+        # Algoritmik Teşhis
+        results = []
+        for ad, v in master_db.items():
+            matches = set(secilenler).intersection(set(v["b"]))
+            if matches:
+                puan = round((len(matches) / len(v["b"])) * 100, 1)
+                results.append({"ad": ad, "puan": puan, "v": v, "m": list(matches)})
         
-        sonuclar = sorted(sonuclar, key=lambda x: x['puan'], reverse=True)
+        results = sorted(results, key=lambda x: x['puan'], reverse=True)
         
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.subheader("🏥 Olası Teşhisler")
-            for s in sonuclar[:10]:
+        c1, c2 = st.columns([1.8, 1])
+        with c1:
+            st.markdown("### 🏛️ Klinik Karar Paneli")
+            for r in results[:10]:
                 st.markdown(f"""
                 <div class='clinical-card'>
-                    <h3>{s['ad']} (%{s['puan']})</h3>
-                    <p><b>Bulgular:</b> {", ".join(s['eslesen'])}</p>
-                    <p>🧪 <b>Tetkik:</b> {s['detay']['t']}</p>
-                    <p style='color:red;'>💊 <b>Tedavi:</b> {s['detay']['ted']}</p>
+                    <h2>{r['ad']} (%{r['puan']})</h2>
+                    <p><b>Bulgular:</b> {", ".join(r['m'])}</p>
+                    <p>🧪 <b>İleri Tetkik:</b> {r['v']['t']}</p>
+                    <p style='color:red;'>💊 <b>Acil Tedavi:</b> {r['v']['ted']}</p>
                 </div>
                 """, unsafe_allow_html=True)
 
-        with col2:
-            st.subheader("🤖 AI Analizi")
-            with st.spinner("AI analiz yapıyor..."):
+        with c2:
+            st.markdown("### 🤖 GEMINI AI ANALİZ")
+            with st.spinner("Görüntü ve Veriler İnceleniyor..."):
                 try:
-                    # KESİN ÇÖZÜM: Kütüphane güncelse bu satır hatasız çalışacaktır.
+                    # Kütüphane güncelse bu satır hatasız çalışacaktır.
                     model = genai.GenerativeModel('gemini-1.5-flash')
-                    txt = f"Vaka: {yas}y {cinsiyet}, Wells: {wells_score}, GCS: {gcs}. Semptomlar: {', '.join(b)}."
+                    prompt = f"Dahiliye uzmanı gibi davran. Hasta {yas}y {cinsiyet}, Wells: {w_puan}, GCS: {gcs}. Semptomlar: {', '.join(secilenler)}."
                     
                     if uploaded_file:
                         img = Image.open(uploaded_file)
-                        res = model.generate_content([txt, img])
+                        response = model.generate_content([prompt, img])
                     else:
-                        res = model.generate_content(txt)
-                    st.write(res.text)
+                        response = model.generate_content(prompt)
+                    st.info(response.text)
                 except Exception as e:
                     st.error(f"AI Hatası: {e}")
 
-            st.download_button("📥 Epikrizi İndir", f"PROTOKOL: {p_no}\nTEŞHİSLER: {sonuclar[0]['ad'] if sonuclar else 'Bulunamadı'}", file_name="epikriz.txt")
-
-st.caption("GELİŞTİRİCİ: İSMAİL ORHAN | 2026")
+st.divider()
+st.caption("İSMAİL ORHAN DAHİLİYE PROJESİ | 2026")
