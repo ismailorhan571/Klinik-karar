@@ -242,24 +242,73 @@ if st.button("🚀 ANALİZİ BAŞLAT"):
         with c2:
             st.markdown("### 📝 EPİKRİZ VE AI ANALİZİ")
             
-            # AI Analiz Bölümü (Eklendi)
-            st.info("🤖 Gemini AI Klinik Yorumu:")
-            try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                vaka_data = f"""
-                Hasta: {yas}y {cinsiyet}. GCS: {gcs_skor}, Wells: {wells_score}.
-                Lab: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, eGFR {egfr}.
-                Semptomlar: {b}. 
-                Lütfen bu verileri uzman bir dahiliyeci gözüyle analiz et.
-                """
-                if up_file:
-                    img = Image.open(up_file)
-                    ai_res = model.generate_content([vaka_data, img])
-                else:
-                    ai_res = model.generate_content(vaka_data)
-                st.markdown(f"<div style='background:#f0f2f6; padding:15px; border-radius:10px;'>{ai_res.text}</div>", unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"AI Hatası: {e}")
+# --- AI ANALİZ BLOĞU (TAM DÜZELTİLDİ) ---
+
+st.info("🤖 Gemini AI Klinik Yorumu:")
+
+try:
+    # ✅ MODEL FALLBACK SİSTEMİ
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    except:
+        model = genai.GenerativeModel('gemini-1.5-pro-latest')
+
+    # ✅ PROFESYONEL KLİNİK PROMPT
+    vaka_data = f"""
+    SEN BİR DAHİLİYE UZMANISIN.
+
+    HASTA BİLGİLERİ:
+    - Yaş: {yas}
+    - Cinsiyet: {cinsiyet}
+    - GCS: {gcs_skor}
+    - Wells Skoru: {wells_score}
+
+    LAB:
+    - Hb: {hb}
+    - WBC: {wbc}
+    - PLT: {plt}
+    - Kreatinin: {kre}
+    - eGFR: {egfr}
+
+    SEMPTOMLAR:
+    {b}
+
+    GÖREV:
+    1. En olası 3 tanıyı yaz
+    2. Hayati risk var mı belirt (Düşük/Orta/Yüksek)
+    3. Mortalitenin yaklaşık riskini (%) belirt
+    4. Acil yapılması gerekenleri yaz
+    5. Kritik uyarıları belirt
+
+    KISA, NET ve PROFESYONEL yaz.
+    """
+
+    # ✅ GÖRSEL VARSA DAHA STABİL GÖNDERİM
+    if up_file:
+        image_bytes = up_file.getvalue()
+
+        ai_res = model.generate_content({
+            "parts": [
+                {"text": vaka_data},
+                {
+                    "inline_data": {
+                        "mime_type": "image/jpeg",
+                        "data": image_bytes
+                    }
+                }
+            ]
+        })
+    else:
+        ai_res = model.generate_content(vaka_data)
+
+    st.markdown(
+        f"<div style='background:#f0f2f6; padding:20px; border-radius:15px; font-size:15px;'>"
+        f"{ai_res.text}</div>",
+        unsafe_allow_html=True
+    )
+
+except Exception as e:
+    st.error(f"AI Hatası: {e}")
 
             st.divider()
             epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}\nGCS: {gcs_skor}, Wells: {wells_score}\neGFR: {egfr} ml/dk\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
