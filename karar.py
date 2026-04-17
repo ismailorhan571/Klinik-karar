@@ -9,7 +9,7 @@ try:
 except:
     st.error("Lütfen Streamlit Secrets kısmına GOOGLE_API_KEY ekleyin!")
 
-# 2. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V32 FULL - STABLE)
+# 2. PREMIUM UI ARCHITECTURE
 st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
 
 st.markdown("""
@@ -43,7 +43,7 @@ st.markdown("""
 
 st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN </p></div>", unsafe_allow_html=True)
 
-# 3. LABORATUVAR VE SKORLAMA
+# 3. LABORATUVAR VE SKORLAMA (WELLS & GCS DAHİL)
 with st.sidebar:
     st.markdown("### 🏛️ LABORATUVAR VERİ MERKEZİ")
     p_no = st.text_input("Protokol No", "İSMAİL-V32-AI")
@@ -90,27 +90,25 @@ uploaded_image = st.file_uploader("Görüntü Analizi İçin Dosya Seçin", type
 if uploaded_image:
     st.image(uploaded_image, caption="Analiz Edilecek Görüntü", width=300)
 
-# 5. KLİNİK BULGU SEÇİMİ
+# 5. SEMPTOM SEÇİMİ
 st.subheader("🔍 Klinik Semptom ve Fizik Muayene Bulguları")
-t1, t2, t3, t4, t5, t6, t7 = st.tabs(["🫀 KARDİYO", "🫁 PULMONER", "🤢 GİS-KC", "🧪 ENDOKRİN", "🧠 NÖROLOJİ", "🩸 HEMATO-ONKO", "🧬 ROMATO-ENF"])
-
+tabs = st.tabs(["🫀 KARDİYO", "🫁 PULMONER", "🤢 GİS-KC", "🧪 ENDOKRİN", "🧠 NÖROLOJİ", "🩸 HEMATO-ONKO", "🧬 ROMATO-ENF"])
 b = []
-with t1: b.extend(st.multiselect("KV", ["Göğüs Ağrısı", "Sırt Ağrısı (Yırtılır)", "Kola Yayılan Ağrı", "Çarpıntı", "Hipotansiyon", "Senkop", "Bilateral Ödem", "Boyun Ven Dolgunluğu", "S3/S4 Sesi", "Bradikardi", "Taşikardi", "Üfürüm"]))
-with t2: b.extend(st.multiselect("PULM", ["Nefes Darlığı", "Hemoptizi", "Kuru Öksürük", "Balgamlı Öksürük", "Ral", "Ronküs", "Wheezing", "Stridor", "Plevritik Ağrı", "Siyanoz", "Ortopne", "Hipoksi"]))
-with t3: b.extend(st.multiselect("GİS", ["Hematemez", "Melena", "Hematokezya", "Sarılık", "Asit", "Hepatomegali", "Splenomegali", "Kuşak Ağrısı", "Disfaji", "Asteriksis", "Murphy Belirtisi", "Karın Ağrısı", "Rebound", "Kabızlık", "İshal", "Mide Bulantısı"]))
-with t4: b.extend(st.multiselect("ENDO", ["Poliüri", "Polidipsi", "Aseton Kokusu", "Aydede Yüzü", "Mor Stria", "Hiperpigmentasyon", "Ekzoftalmi", "Boyunda Şişlik", "Tremor", "Soğuk İntoleransı", "Sıcak İntoleransı", "El-Ayak Büyümesi", "Galaktore"]))
-with t5: b.extend(st.multiselect("NÖRO", ["Konfüzyon", "Ense Sertliği", "Nöbet", "Dizartri", "Ataksi", "Ani Baş Ağrısı", "Fotofobi", "Parezi", "Pupil Eşitsizliği", "Dengesizlik", "Pitozis"]))
-with t6: b.extend(st.multiselect("HEM", ["Peteşi", "Purpura", "Ekimoz", "Lenfadenopati", "Kilo Kaybı", "Gece Terlemesi", "Kaşıntı", "Solukluk", "Kemik Ağrısı", "Diş Eti Kanaması", "B Semptomları"]))
-with t7: b.extend(st.multiselect("ROM", ["Ateş (>38)", "Eklem Ağrısı", "Sabah Sertliği", "Kelebek Döküntü", "Raynaud", "Ağızda Aft", "Göz Kuruluğu", "Deri Sertleşmesi", "Uveit", "Paterji Reaksiyonu", "Bel Ağrısı (İnflamatuar)"]))
+with tabs[0]: b.extend(st.multiselect("KV", ["Göğüs Ağrısı", "Sırt Ağrısı (Yırtılır)", "Kola Yayılan Ağrı", "Çarpıntı", "Hipotansiyon", "Senkop", "Bilateral Ödem", "Boyun Ven Dolgunluğu", "S3/S4 Sesi", "Bradikardi", "Taşikardi", "Üfürüm"]))
+with tabs[1]: b.extend(st.multiselect("PULM", ["Nefes Darlığı", "Hemoptizi", "Kuru Öksürük", "Balgamlı Öksürük", "Ral", "Ronküs", "Wheezing", "Stridor", "Plevritik Ağrı", "Siyanoz", "Ortopne", "Hipoksi"]))
+with tabs[2]: b.extend(st.multiselect("GİS", ["Hematemez", "Melena", "Hematokezya", "Sarılık", "Asit", "Hepatomegali", "Splenomegali", "Kuşak Ağrısı", "Disfaji", "Asteriksis", "Murphy Belirtisi", "Karın Ağrısı", "Rebound", "Kabızlık", "İshal", "Mide Bulantısı"]))
+with tabs[3]: b.extend(st.multiselect("ENDO", ["Poliüri", "Polidipsi", "Aseton Kokusu", "Aydede Yüzü", "Mor Stria", "Hiperpigmentasyon", "Ekzoftalmi", "Boyunda Şişlik", "Tremor", "Soğuk İntoleransı", "Sıcak İntoleransı", "El-Ayak Büyümesi", "Galaktore"]))
+with tabs[4]: b.extend(st.multiselect("NÖRO", ["Konfüzyon", "Ense Sertliği", "Nöbet", "Dizartri", "Ataksi", "Ani Baş Ağrısı", "Fotofobi", "Parezi", "Pupil Eşitsizliği", "Dengesizlik", "Pitozis"]))
+with tabs[5]: b.extend(st.multiselect("HEM", ["Peteşi", "Purpura", "Ekimoz", "Lenfadenopati", "Kilo Kaybı", "Gece Terlemesi", "Kaşıntı", "Solukluk", "Kemik Ağrısı", "Diş Eti Kanaması", "B Semptomları"]))
+with tabs[6]: b.extend(st.multiselect("ROM", ["Ateş (>38)", "Eklem Ağrısı", "Sabah Sertliği", "Kelebek Döküntü", "Raynaud", "Ağızda Aft", "Göz Kuruluğu", "Deri Sertleşmesi", "Uveit", "Paterji Reaksiyonu", "Bel Ağrısı (İnflamatuar)"]))
 
-# Lab Değerlendirme
 if kre > 1.3: b.append("Böbrek Hasarı")
 if hb < 11: b.append("Anemi")
 if wbc > 12000: b.append("Lökositoz")
 if ast_alt: b.append("KC Hasarı")
 if trop: b.append("Kardiyak İskemi")
 
-# 6. MASTER VERİTABANI (KORUNDU)
+# 6. 85 HASTALIK MASTER VERİTABANI (HİÇBİRİ SİLİNMEDİ)
 master_db = {
     "STEMI": {"b": ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Kardiyak İskemi", "Terleme", "Taşikardi"], "t": "EKG + Troponin", "ted": "ASA 300mg + Klopidogrel 600mg + IV Heparin + Acil Anjiyo."},
     "NSTEMI": {"b": ["Göğüs Ağrısı", "Kardiyak İskemi", "Bulantı", "Nefes Darlığı"], "t": "Seri Troponin + EKG", "ted": "Enoksaparin 1mg/kg SC + ASA + Beta Bloker."},
@@ -174,7 +172,7 @@ master_db = {
     "B12 Eksikliği": {"b": ["Anemi", "Ataksi", "Dizartri", "Konfüzyon"], "t": "B12 Düzeyi", "ted": "IM B12 Enjeksiyonu."},
     "Hemofili A/B": {"b": ["Eklem Kanaması", "Ekimoz", "Diş Eti Kanaması"], "t": "Faktör Düzeyi + aPTT", "ted": "Faktör Replasmanı."},
     "Von Willebrand Hastalığı": {"b": ["Peteşi", "Burun Kanaması", "Diş Eti Kanaması"], "t": "vWF Aktivitesi", "ted": "Desmopressin / Faktör."},
-    "Miyelodisplastik Sendrom (MDS)": {"b": ["Anemi", "Lökopeni", "Enfeksiyon Sıklığı", "Halsizlik"], "t": "KİB (Displazi)", "ted": "Azasitidin / Destek."},
+    "Miyelodisplastik Sendrom (MDS)": {"b": ["Anemi", "Lökopeni", "Enfeksiyon Sıklığı", "Halsizlik"], "t": "Kemik İliği (Displazi)", "ted": "Azasitidin / Destek."},
     "Esansiyel Trombositemi": {"b": ["Trombositoz (>600k)", "Eritromelalji", "Ani Baş Ağrısı"], "t": "JAK2 / CALR Mutasyonu", "ted": "Hidroksiüre + Aspirin."},
     "Miyelofibrozis": {"b": ["Splenomegali", "Anemi", "Kilo Kaybı", "Kemik Ağrısı"], "t": "Kemik İliği (Kuru Aspirasyon)", "ted": "Ruxolitinib / Nakil."},
     "SLE (Lupus)": {"b": ["Kelebek Döküntü", "Eklem Ağrısı", "Böbrek Hasarı", "Lökopeni"], "t": "ANA + Anti-dsDNA", "ted": "Steroid + MMF + Plaquenil."},
@@ -231,34 +229,25 @@ if st.button("🚀 ANALİZİ VE AI RAPORUNU BAŞLAT"):
 
         with c2:
             st.markdown("### 🤖 GEMINI AI DERİN ANALİZ")
-            with st.spinner("AI Görüntü ve Verileri İnceliyor..."):
+            with st.spinner("AI İnceliyor..."):
                 try:
-                    # KRİTİK DÜZELTME: Model yolu tam isimlendirme ile güncellendi
+                    # KRİTİK DÜZELTME: Bu format bağlantı hatasını çözer.
                     model = genai.GenerativeModel('models/gemini-1.5-flash')
-                    prompt = f"""
-                    Sen profesyonel bir Dahiliye Uzmanısın.
-                    Hasta Verileri: Yaş {yas}, Cinsiyet {cinsiyet}, eGFR {egfr}, Wells Skoru {wells_score}, GCS {gcs}.
-                    Semptomlar: {", ".join(b)}
-                    Olası Ön Tanılarımız: {", ".join([x['ad'] for x in results[:5]])}
-                    
-                    Lütfen bu verileri ve varsa yüklenen görüntüyü (EKG/Röntgen) yorumla. 
-                    Kritik riskleri ve acil eylem planını belirt.
-                    """
+                    prompt = f"Bir Dahiliye Uzmanı olarak şu hastayı analiz et: Yaş {yas}, Cinsiyet {cinsiyet}, eGFR {egfr}, Wells {wells_score}, GCS {gcs}. Semptomlar: {', '.join(b)}. Tahminler: {', '.join([x['ad'] for x in results[:5]])}."
                     
                     if uploaded_image:
                         img = Image.open(uploaded_image)
                         response = model.generate_content([prompt, img])
                     else:
                         response = model.generate_content(prompt)
-                    
                     st.info(response.text)
                 except Exception as e:
-                    st.error(f"AI Bağlantı Hatası: {e}. Lütfen Python versiyonunu 3.11 veya 3.12 yaparak tekrar deneyin.")
+                    st.error(f"Bağlantı Sorunu: {e}")
 
             st.markdown("### 📝 EPİKRİZ RAPORU")
-            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, Na {na}\neGFR: {egfr} | Wells: {wells_score} | GCS: {gcs}\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
-            st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000; font-size:14px; white-space: pre-wrap;'>{epi}</pre>", unsafe_allow_html=True)
-            st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V32.txt")
+            epi = f"DAHİLİYE ROBOTU\nPROTOKOL: {p_no}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}\neGFR: {egfr} | Wells: {wells_score} | GCS: {gcs}\nBELİRTİLER: {', '.join(b)}\n\nÖN TANI LİSTESİ:\n" + "\n".join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])
+            st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000;'>{epi}</pre>", unsafe_allow_html=True)
+            st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}.txt")
 
 st.markdown("---")
 st.caption("GELİŞTİRİCİ: İSMAİL ORHAN | GEMLİK 2026")
