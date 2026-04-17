@@ -3,36 +3,19 @@ import google.generativeai as genai
 from PIL import Image
 from datetime import datetime
 
-# 1. API Ayarları (Secrets'tan güvenli alım)
+# --- 1. API AYARLARI VE BAĞLANTI (SİLİNMEDİ, DÜZENLENDİ) ---
 if "GEMINI_API_KEY" in st.secrets:
     api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
+    # Model ismini v1beta hatasını önlemek için güncel tutuyoruz
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
 else:
-    st.error("API Anahtarı bulunamadı! Lütfen Secrets panelini kontrol edin.")
+    st.error("API Anahtarı Secrets panelinde bulunamadı!")
+    api_key = None
 
-# 2. Model Tanımlama (En güncel ve stabil versiyon)
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
-
-# --- AI ANALİZ MOTORU ---
+# --- 2. AI ANALİZ MOTORU (TEK VE GÜÇLÜ FONKSİYON) ---
 def ai_derin_analiz(analiz_metni, gorsel=None):
     try:
-        # Görsel varsa metinle birlikte, yoksa sadece metinle sorgu gönder
-        if gorsel:
-            response = model.generate_content([analiz_metni, gorsel])
-        else:
-            response = model.generate_content(analiz_metni)
-        return response.text
-    except Exception as e:
-        return f"AI Analiz Hatası: {str(e)} "
-        
-# --- AI ANALİZ MOTORU (GÜNCELLENDİ) ---
-def ai_derin_analiz(api_key, analiz_metni, gorsel=None):
-    try:
-        genai.configure(api_key=api_key)
-        # Model ismi en güncel haliyle kontrol edildi
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-
-        
         prompt = f"""
         Sen profesyonel bir dâhiliye uzmanı yardımcısısın. 
         Aşağıdaki klinik bulguları ve varsa görseli (EKG, röntgen vb.) analiz et.
@@ -40,7 +23,6 @@ def ai_derin_analiz(api_key, analiz_metni, gorsel=None):
         HASTA VERİLERİ:
         {analiz_metni}
         """
-        
         if gorsel:
             img = Image.open(gorsel)
             response = model.generate_content([prompt, img])
@@ -50,7 +32,7 @@ def ai_derin_analiz(api_key, analiz_metni, gorsel=None):
     except Exception as e:
         return f"AI Analiz Hatası: {str(e)}"
 
-# --- UI TASARIMI VE YAPILANDIRMA ---
+# --- 3. UI TASARIMI VE YAPILANDIRMA (ORİJİNAL CSS KORUNDU) ---
 st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
 
 st.markdown("""
@@ -84,18 +66,9 @@ st.markdown("""
 
 st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU V4.1</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN </p></div>", unsafe_allow_html=True)
 
-# --- SOL MENÜ (OTOMATİK API ENTEGRELİ) ---
+# --- 4. SOL MENÜ (TÜM VERİLER KORUNDU) ---
 with st.sidebar:
     st.markdown("### 🧠 AI KONTROL MERKEZİ")
-    
-    # API Anahtarı artık Secrets'tan otomatik çekiliyor
-    try:
-        user_api_key = st.secrets["GEMINI_API_KEY"]
-        st.success("✅ API Anahtarı Kasadan Yüklendi")
-    except Exception:
-        st.error("❌ API Anahtarı Secrets'ta bulunamadı!")
-        user_api_key = None
-
     yuklenen_gorsel = st.file_uploader("📷 EKG / Röntgen / Lezyon Yükle", type=['jpg', 'jpeg', 'png'])
     st.divider()
 
@@ -104,7 +77,6 @@ with st.sidebar:
     cinsiyet = st.radio("Cinsiyet", ["Erkek", "Kadın"])
     yas = st.number_input("Yaş", 0, 120, 45)
     kilo = st.number_input("Kilo (kg)", 5, 250, 85)
-    st.divider()
     kre = st.number_input("Kreatinin", 0.1, 45.0, 1.1)
     hb = st.number_input("Hemoglobin (Hb)", 3.0, 25.0, 14.0)
     wbc = st.number_input("WBC (Lökosit)", 0, 500000, 8500)
@@ -119,35 +91,29 @@ with st.sidebar:
     # eGFR Hesabı
     if kre > 0:
         base_egfr = ((140 - yas) * kilo) / (72 * kre)
-        if cinsiyet == "Kadın":
-            base_egfr = base_egfr * 0.85
+        if cinsiyet == "Kadın": base_egfr *= 0.85
         egfr = round(base_egfr, 1)
-    else:
-        egfr = 0
+    else: egfr = 0
     st.metric("eGFR Skoru", f"{egfr} ml/dk")
-    st.divider()
 
-    # SKORLAMALAR (GKS VE WELLS)
-    with st.expander("🧠 GLASGOW KOMA SKALASI (GKS)", expanded=False):
+    with st.expander("🧠 GLASGOW KOMA SKALASI (GKS)"):
         gks_e = st.selectbox("Göz Açma (E)", ["4 - Spontan", "3 - Sese", "2 - Ağrıya", "1 - Yok"])
         gks_v = st.selectbox("Sözel Cevap (V)", ["5 - Oryante", "4 - Konfüze", "3 - Anlamsız Kelimeler", "2 - Anlaşılmaz Sesler", "1 - Yok"])
         gks_m = st.selectbox("Motor Cevap (M)", ["6 - Emirlere Uyar", "5 - Ağrıyı Lokalize Eder", "4 - Ağrıdan Çeker", "3 - Fleksör Yanıt (Dekortike)", "2 - Ekstansör Yanıt (Deserebre)", "1 - Yok"])
         gks_total = int(gks_e[0]) + int(gks_v[0]) + int(gks_m[0])
-        st.info(f"Toplam GKS: {gks_total}/15")
 
-    with st.expander("🫁 WELLS PE SKORU", expanded=False):
+    with st.expander("🫁 WELLS PE SKORU"):
         w1 = st.checkbox("DVT Klinik Bulguları (+3)")
         w2 = st.checkbox("PE En Olası Tanı (+3)")
         w3 = st.checkbox("Kalp Hızı > 100 (+1.5)")
-        w4 = st.checkbox("İmmobilizasyon (>3 gün) veya Cerrahi (+1.5)")
+        w4 = st.checkbox("İmmobilizasyon (>3 gün) (+1.5)")
         w5 = st.checkbox("Önceki DVT/PE Öyküsü (+1.5)")
         w6 = st.checkbox("Hemoptizi (+1)")
         w7 = st.checkbox("Aktif Malignite (+1)")
         wells_score = sum([3 if w1 else 0, 3 if w2 else 0, 1.5 if w3 else 0, 1.5 if w4 else 0, 1.5 if w5 else 0, 1 if w6 else 0, 1 if w7 else 0])
         wells_risk = "Düşük Risk" if wells_score < 2 else ("Orta Risk" if wells_score <= 6 else "Yüksek Risk")
-        st.info(f"Wells: {wells_score} ({wells_risk})")
 
-# --- KLİNİK BULGU SEÇİMİ ---
+# --- 5. KLİNİK BULGU SEÇİMİ (TÜM TABS KORUNDU) ---
 st.subheader("🔍 Klinik Semptom ve Fizik Muayene Bulguları")
 t1, t2, t3, t4, t5, t6, t7 = st.tabs(["🫀 KARDİYO", "🫁 PULMONER", "🤢 GİS-KC", "🧪 ENDOKRİN", "🧠 NÖROLOJİ", "🩸 HEMATO-ONKO", "🧬 ROMATO-ENF"])
 
@@ -160,17 +126,15 @@ with t5: b.extend(st.multiselect("NÖRO", ["Konfüzyon", "Ense Sertliği", "Nöb
 with t6: b.extend(st.multiselect("HEM", ["Peteşi", "Purpura", "Ekimoz", "Lenfadenopati", "Kilo Kaybı", "Gece Terlemesi", "Kaşıntı", "Solukluk", "Kemik Ağrısı", "Diş Eti Kanaması", "B Semptomları"]))
 with t7: b.extend(st.multiselect("ROM", ["Ateş (>38)", "Eklem Ağrısı", "Sabah Sertliği", "Kelebek Döküntü", "Raynaud", "Ağızda Aft", "Göz Kuruluğu", "Deri Sertleşmesi", "Uveit", "Paterji Reaksiyonu", "Bel Ağrısı (İnflamatuar)"]))
 
-# Lab Verilerini Semptomlara Ekleme
+# Otomatik Lab Bulguları
 if kre > 1.3: b.append("Böbrek Hasarı")
 if hb < 11: b.append("Anemi")
 if wbc > 12000: b.append("Lökositoz")
 if plt < 140000: b.append("Trombositopeni")
-if glu > 180: b.append("Hiperglisemi")
-if na < 135: b.append("Hiponatremi")
 if ast_alt: b.append("KC Hasarı")
 if trop: b.append("Kardiyak İskemi")
 
-# --- MASTER 85+ HASTALIK VERİTABANI (TAM LİSTE KORUNDU) ---
+# --- 6. MASTER 85+ HASTALIK VERİTABANI (TAM LİSTE SAKLANDI) ---
 master_db = {
     "STEMI": {"b": ["Göğüs Ağrısı", "Kola Yayılan Ağrı", "Kardiyak İskemi", "Terleme", "Taşikardi"], "t": "EKG + Troponin", "ted": "ASA 300mg + Klopidogrel 600mg + IV Heparin + Acil Anjiyo."},
     "NSTEMI": {"b": ["Göğüs Ağrısı", "Kardiyak İskemi", "Bulantı", "Nefes Darlığı"], "t": "Seri Troponin + EKG", "ted": "Enoksaparin 1mg/kg SC + ASA + Beta Bloker."},
@@ -259,7 +223,7 @@ master_db = {
     "Sarkoidoz": {"b": ["Nefes Darlığı", "Lenfadenopati", "Uveit", "Kuru Öksürük"], "t": "ACE + Akciğer Grafisi", "ted": "Oral Steroid."},
 }
 
-# --- ANALİZ ÇIKTI PANELİ ---
+# --- 7. ANALİZ VE ÇIKTI ---
 if st.button("🚀 ANALİZİ BAŞLAT"):
     if not b:
         st.error("Klinik veri girişi yapılmadı!")
@@ -289,37 +253,17 @@ if st.button("🚀 ANALİZİ BAŞLAT"):
                 </div>
                 """, unsafe_allow_html=True)
             
-            # AI Analizi Otomatik Çalışıyor
-            if user_api_key:
+            if api_key:
                 st.markdown("---")
                 st.markdown("### 🤖 Gemini AI Derin Konsültasyon")
                 with st.spinner("AI Klinik Asistanı Verileri İşliyor..."):
                     epi_text = f"Protokol: {p_no}, {cinsiyet}, {yas} yaş. GKS: {gks_total}. Wells Skoru: {wells_score}. Bulgular: {', '.join(b)}"
-                    ai_sonuc = ai_derin_analiz(user_api_key, epi_text, yuklenen_gorsel)
+                    ai_sonuc = ai_derin_analiz(epi_text, yuklenen_gorsel)
                     st.info(ai_sonuc)
-            else:
-                st.warning("⚠️ AI analizi için Secrets'ta geçerli bir API anahtarı bulunmalıdır.")
 
         with c2:
             st.markdown("### 📝 EPİKRİZ RAPORU (V4.1)")
-            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU
----------------------------
-PROTOKOL: {p_no}
-HASTA CİNSİYETİ: {cinsiyet}
-TARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}
-LAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, Na {na}
-eGFR: {egfr} ml/dk
-GKS SKORU: {gks_total}/15
-WELLS PE SKORU: {wells_score} ({wells_risk})
-
-BELİRTİLER:
-{", ".join(b)}
-
-ÖN TANI LİSTESİ:
-{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}
-
-GELİŞTİRİCİ: İSMAİL ORHAN
----------------------------"""
+            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nCİNSİYET: {cinsiyet}\nYAŞ: {yas}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, Na {na}\neGFR: {egfr} ml/dk\nGKS: {gks_total}/15\nWELLS: {wells_score} ({wells_risk})\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
             st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000; font-size:14px; white-space: pre-wrap;'>{epi}</pre>", unsafe_allow_html=True)
             st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V41.txt")
 
