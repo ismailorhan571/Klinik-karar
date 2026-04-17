@@ -1,7 +1,30 @@
 import streamlit as st
+import google.generativeai as genai
+from PIL import Image
 from datetime import datetime
 
-# 1. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V30 TITANIC-GENDER)
+# --- YENİ EKLENEN AI FONKSİYONU ---
+def ai_derin_analiz(api_key, analiz_metni, gorsel=None):
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        prompt = f"""
+        Sen profesyonel bir dâhiliye uzmanı yardımcısısın. 
+        Aşağıdaki klinik bulguları ve varsa görseli analiz et.
+        Olası tanılar, yapılması gereken ek tetkikler ve tedavi önerilerini tıbbi bir dille açıkla.
+        HASTA VERİLERİ:
+        {analiz_metni}
+        """
+        if gorsel:
+            img = Image.open(gorsel)
+            response = model.generate_content([prompt, img])
+        else:
+            response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"AI Analiz Hatası: {str(e)}"
+
+# 1. PREMIUM UI ARCHITECTURE (İSMAİL ORHAN | V4.0 TITANIC-GENDER-AI)
 st.set_page_config(page_title="İSMAİL ORHAN DAHİLİYE ROBOTU", page_icon="💊", layout="wide")
 
 st.markdown("""
@@ -33,13 +56,18 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN </p></div>", unsafe_allow_html=True)
+st.markdown("<div class='main-header'><h1>DAHİLİYE KLİNİK KARAR ROBOTU V4.0</h1><p>GELİŞTİRİCİ: İSMAİL ORHAN </p></div>", unsafe_allow_html=True)
 
-# 2. LABORATUVAR TERMİNALİ (CINSIYET EKLENDI)
+# 2. LABORATUVAR TERMİNALİ VE AI GİRİŞİ
 with st.sidebar:
+    st.markdown("### 🧠 AI KONTROL MERKEZİ")
+    user_api_key = st.text_input("Gemini API Key Giriniz", type="password")
+    yuklenen_gorsel = st.file_uploader("EKG / Röntgen / Lezyon Yükle", type=['jpg', 'jpeg', 'png'])
+    st.divider()
+
     st.markdown("### 🏛️ LABORATUVAR VERİ MERKEZİ")
-    p_no = st.text_input("Protokol No", "İSMAİL-V30-FINAL")
-    cinsiyet = st.radio("Cinsiyet", ["Erkek", "Kadın"]) # YENİ EKLENEN
+    p_no = st.text_input("Protokol No", "İSMAİL-V40-FINAL")
+    cinsiyet = st.radio("Cinsiyet", ["Erkek", "Kadın"])
     yas = st.number_input("Yaş", 0, 120, 45)
     kilo = st.number_input("Kilo (kg)", 5, 250, 85)
     st.divider()
@@ -63,6 +91,28 @@ with st.sidebar:
     else:
         egfr = 0
     st.metric("eGFR Skoru", f"{egfr} ml/dk")
+    st.divider()
+
+    # --- YENİ EKLENEN SKORLAMALAR (GKS VE WELLS) ---
+    with st.expander("🧠 GLASGOW KOMA SKALASI (GKS)", expanded=False):
+        gks_e = st.selectbox("Göz Açma (E)", ["4 - Spontan", "3 - Sese", "2 - Ağrıya", "1 - Yok"])
+        gks_v = st.selectbox("Sözel Cevap (V)", ["5 - Oryante", "4 - Konfüze", "3 - Anlamsız Kelimeler", "2 - Anlaşılmaz Sesler", "1 - Yok"])
+        gks_m = st.selectbox("Motor Cevap (M)", ["6 - Emirlere Uyar", "5 - Ağrıyı Lokalize Eder", "4 - Ağrıdan Çeker", "3 - Fleksör Yanıt (Dekortike)", "2 - Ekstansör Yanıt (Deserebre)", "1 - Yok"])
+        gks_total = int(gks_e[0]) + int(gks_v[0]) + int(gks_m[0])
+        st.info(f"Toplam GKS: {gks_total}/15")
+
+    with st.expander("🫁 WELLS PE SKORU (Pulmoner Emboli)", expanded=False):
+        w1 = st.checkbox("DVT Klinik Bulguları (+3)")
+        w2 = st.checkbox("PE En Olası Tanı (+3)")
+        w3 = st.checkbox("Kalp Hızı > 100 (+1.5)")
+        w4 = st.checkbox("İmmobilizasyon (>3 gün) veya Cerrahi (+1.5)")
+        w5 = st.checkbox("Önceki DVT/PE Öyküsü (+1.5)")
+        w6 = st.checkbox("Hemoptizi (+1)")
+        w7 = st.checkbox("Aktif Malignite (+1)")
+        
+        wells_score = sum([3 if w1 else 0, 3 if w2 else 0, 1.5 if w3 else 0, 1.5 if w4 else 0, 1.5 if w5 else 0, 1 if w6 else 0, 1 if w7 else 0])
+        wells_risk = "Düşük Risk" if wells_score < 2 else ("Orta Risk" if wells_score <= 6 else "Yüksek Risk")
+        st.info(f"Wells Skoru: {wells_score} ({wells_risk})")
 
 # 3. KLİNİK BULGU SEÇİMİ
 st.subheader("🔍 Klinik Semptom ve Fizik Muayene Bulguları")
@@ -214,13 +264,40 @@ if st.button("🚀 ANALİZİ BAŞLAT"):
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
+            
+            # --- AI DERİN ANALİZİN ÇALIŞTIĞI YER ---
+            if user_api_key:
+                st.markdown("---")
+                st.markdown("### 🤖 Gemini AI Derin Konsültasyon")
+                with st.spinner("AI Klinik Asistanı Verileri İşliyor..."):
+                    epi_text = f"Protokol: {p_no}, {cinsiyet}, {yas} yaş. GKS: {gks_total}. Wells Skoru: {wells_score}. Bulgular: {', '.join(b)}"
+                    ai_sonuc = ai_derin_analiz(user_api_key, epi_text, yuklenen_gorsel)
+                    st.info(ai_sonuc)
+            else:
+                st.warning("⚠️ Derin AI analizi için lütfen sol menüden API anahtarınızı girin.")
 
         with c2:
-            st.markdown("### 📝 EPİKRİZ RAPORU (V30)")
-            # Epikriz metnine cinsiyet ve protokol eklendi
-            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, Na {na}\neGFR (Cinsiyete Duyarlı): {egfr} ml/dk\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
+            st.markdown("### 📝 EPİKRİZ RAPORU (V4.0)")
+            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU
+---------------------------
+PROTOKOL: {p_no}
+HASTA CİNSİYETİ: {cinsiyet}
+TARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+LAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, Na {na}
+eGFR: {egfr} ml/dk
+GKS SKORU: {gks_total}/15
+WELLS PE SKORU: {wells_score} ({wells_risk})
+
+BELİRTİLER:
+{", ".join(b)}
+
+ÖN TANI LİSTESİ:
+{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}
+
+GELİŞTİRİCİ: İSMAİL ORHAN
+---------------------------"""
             st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000; font-size:14px; white-space: pre-wrap;'>{epi}</pre>", unsafe_allow_html=True)
-            st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V30.txt")
+            st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V40.txt")
 
 st.markdown("---")
 st.caption("GELİŞTİRİCİ: İSMAİL ORHAN GEMLİK 2026")
