@@ -310,7 +310,7 @@ try:
 except Exception as e:
     st.error(f"AI Hatası: {e}")
 
-            st.divider()
+      st.divider()
             epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nPROTOKOL: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}\nGCS: {gcs_skor}, Wells: {wells_score}\neGFR: {egfr} ml/dk\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
             st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000; font-size:14px; white-space: pre-wrap;'>{epi}</pre>", unsafe_allow_html=True)
             st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V30.txt")
