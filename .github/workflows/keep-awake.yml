@@ -1,0 +1,23 @@
+name: Keep Streamlit App Awake - Empty Commit
+
+on:
+  schedule:
+    - cron: '0 */10 * * *'   # Her 10 saatte bir (günde \~2.4 kez)
+  workflow_dispatch:        # Manuel olarak da çalıştırabilmen için
+
+jobs:
+  keep-awake:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create empty commit to keep app awake
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit --allow-empty -m "Empty commit to prevent Streamlit hibernation - $(date)"
+          git push
