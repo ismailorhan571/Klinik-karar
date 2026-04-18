@@ -1,4 +1,4 @@
-import streamlit as st
+İmport streamlit as st
 from datetime import datetime
 import google.generativeai as genai
 from PIL import Image
@@ -27,10 +27,6 @@ if 'ses_wbc' not in st.session_state: st.session_state.ses_wbc = 8500
 if 'ses_plt' not in st.session_state: st.session_state.ses_plt = 245000
 if 'ses_kre' not in st.session_state: st.session_state.ses_kre = 1.1
 if 'ses_glu' not in st.session_state: st.session_state.ses_glu = 105
-
-# --- KOTA KORUMA DEĞİŞKENLERİ (YENİ) ---
-if 'analiz_tamamlandi' not in st.session_state: st.session_state.analiz_tamamlandi = False
-if 'analiz_sonuclari' not in st.session_state: st.session_state.analiz_sonuclari = []
 
 st.markdown("""
     <style>
@@ -318,12 +314,11 @@ master_db = {
     "Sarkoidoz": {"b": ["Nefes Darlığı", "Lenfadenopati", "Uveit", "Kuru Öksürük"], "t": "ACE + Akciğer Grafisi", "ted": "Oral Steroid."},
 }
 
-# --- ANALİZİ BAŞLAT ---
+# ANALİZİ BAŞLAT
 if st.button("🚀 ANALİZİ BAŞLAT"):
     if not b:
         st.error("Klinik veri girişi yapılmadı!")
     else:
-        # 1. Lokal Teşhis Hesaplaması
         results = []
         for ad, v in master_db.items():
             matches = set(b).intersection(set(v["b"]))
@@ -333,78 +328,69 @@ if st.button("🚀 ANALİZİ BAŞLAT"):
         
         results = sorted(results, key=lambda x: x['puan'], reverse=True)
         
-        # Sonuçları state'e kaydet (Sayfa yenilense de kaybolmayacak)
-        st.session_state.analiz_sonuclari = results
-        
-        # 2. AI ÇAĞRISI (Sadece butona basıldığında çalışır)
-        try:
-            with st.spinner("Gemini analiz ediliyor... (Kota Koruma Modu Aktif)"):
-                model = genai.GenerativeModel('gemini-2.5-flash-lite')
-                vaka_data = f"""
-                Hasta: {yas}y {cinsiyet}. Ad Soyad: {p_no}. GCS: {gcs_skor}, Wells: {wells_score}.
-                Lab: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, eGFR {egfr}, AKŞ {glu}.
-                Semptomlar: {b}. 
-                Lütfen bu verileri uzman bir dahiliyeci gözüyle analiz et.
-                """
-                if up_file:
-                    img = Image.open(up_file)
-                    ai_res = model.generate_content([vaka_data, img])
+        c1, c2 = st.columns([1.8, 1])
+        with c1:
+            st.markdown("### 🏛️ Teşhis ve Tedavi Paneli")
+            for r in results:
+                st.markdown(f"""
+                <div class='clinical-card'>
+                    <div style='font-size:3rem; font-weight:800; color:#000;'>{r['ad']} (%{r['puan']})</div>
+                    <p style='color:#DC2626; font-weight:700;'>KRİTİK BULGULAR: {", ".join(r['m'])}</p>
+                    <hr style='border: 2px solid #DC2626;'>
+                    <p>🧪 <b>İleri Tetkik:</b> {r['v']['t']}</p>
+                    <p style='background:#FFF4F4; padding:25px; border-radius:30px; border-left:20px solid #DC2626;'>
+                        💊 <b>DETAYLI TEDAVİ:</b> {r['v']['ted']}
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+
+            if results and not st.session_state.top_tani_seslendirildi:
+                top = results[0]
+                tts_text = f"En yüksek ön tanı {top['ad']} yüzde {top['puan']}"
+                try:
+                    tts = gTTS(text=tts_text, lang='tr')
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    fp.seek(0)
+                    st.audio(fp, format="audio/mp3", autoplay=True)
+                    st.success(f"🔊 En yüksek ön tanı otomatik seslendiriliyor: {top['ad']} (%{top['puan']})")
+                    st.session_state.top_tani_seslendirildi = True
+                except:
+                    st.warning("Seslendirme şu anda kullanılamıyor.")
+
+        with c2:
+            st.markdown("### 📝 EPİKRİZ VE AI ANALİZİ")
+            st.info("🤖 Gemini AI Klinik Yorumu:")
+            
+            if st.session_state.ai_klinik_yorum is None:
+                try:
+                    with st.spinner("Gemini analiz ediliyor..."):
+                        model = genai.GenerativeModel('gemini-2.5-flash-lite')
+                        vaka_data = f"""
+                        Hasta: {yas}y {cinsiyet}. Ad Soyad: {p_no}. GCS: {gcs_skor}, Wells: {wells_score}.
+                        Lab: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}, eGFR {egfr}, AKŞ {glu}.
+                        Semptomlar: {b}. 
+                        Lütfen bu verileri uzman bir dahiliyeci gözüyle analiz et.
+                        """
+                        if up_file:
+                            img = Image.open(up_file)
+                            ai_res = model.generate_content([vaka_data, img])
+                        else:
+                            ai_res = model.generate_content(vaka_data)
+                        st.session_state.ai_klinik_yorum = ai_res.text
+                except Exception as e:
+                    st.session_state.ai_klinik_yorum = f"❌ AI Hatası: {str(e)}\n\n30-60 saniye bekleyip tekrar deneyin."
+            
+            if st.session_state.ai_klinik_yorum:
+                if "❌" in st.session_state.ai_klinik_yorum:
+                    st.error(st.session_state.ai_klinik_yorum)
                 else:
-                    ai_res = model.generate_content(vaka_data)
-                st.session_state.ai_klinik_yorum = ai_res.text
-        except Exception as e:
-            st.session_state.ai_klinik_yorum = f"❌ AI Hatası: {str(e)}\n\n30-60 saniye bekleyip tekrar deneyin."
-        
-        # Analizin başarıyla bittiğini kaydet
-        st.session_state.analiz_tamamlandi = True
+                    st.markdown(f"<div style='background:#f0f2f6; padding:15px; border-radius:10px;'>{st.session_state.ai_klinik_yorum}</div>", unsafe_allow_html=True)
 
-# --- EKRANA YAZDIRMA BÖLÜMÜ (Butondan bağımsızdır, Epikriz indirilirken silinmez) ---
-if st.session_state.analiz_tamamlandi:
-    results = st.session_state.analiz_sonuclari
-    c1, c2 = st.columns([1.8, 1])
-    with c1:
-        st.markdown("### 🏛️ Teşhis ve Tedavi Paneli")
-        for r in results:
-            st.markdown(f"""
-            <div class='clinical-card'>
-                <div style='font-size:3rem; font-weight:800; color:#000;'>{r['ad']} (%{r['puan']})</div>
-                <p style='color:#DC2626; font-weight:700;'>KRİTİK BULGULAR: {", ".join(r['m'])}</p>
-                <hr style='border: 2px solid #DC2626;'>
-                <p>🧪 <b>İleri Tetkik:</b> {r['v']['t']}</p>
-                <p style='background:#FFF4F4; padding:25px; border-radius:30px; border-left:20px solid #DC2626;'>
-                    💊 <b>DETAYLI TEDAVİ:</b> {r['v']['ted']}
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-
-        if results and not st.session_state.top_tani_seslendirildi:
-            top = results[0]
-            tts_text = f"En yüksek ön tanı {top['ad']} yüzde {top['puan']}"
-            try:
-                tts = gTTS(text=tts_text, lang='tr')
-                fp = io.BytesIO()
-                tts.write_to_fp(fp)
-                fp.seek(0)
-                st.audio(fp, format="audio/mp3", autoplay=True)
-                st.success(f"🔊 En yüksek ön tanı otomatik seslendiriliyor: {top['ad']} (%{top['puan']})")
-                st.session_state.top_tani_seslendirildi = True
-            except:
-                st.warning("Seslendirme şu anda kullanılamıyor.")
-
-    with c2:
-        st.markdown("### 📝 EPİKRİZ VE AI ANALİZİ")
-        st.info("🤖 Gemini AI Klinik Yorumu:")
-        
-        if st.session_state.ai_klinik_yorum:
-            if "❌" in st.session_state.ai_klinik_yorum:
-                st.error(st.session_state.ai_klinik_yorum)
-            else:
-                st.markdown(f"<div style='background:#f0f2f6; padding:15px; border-radius:10px;'>{st.session_state.ai_klinik_yorum}</div>", unsafe_allow_html=True)
-
-        st.divider()
-        epi = f"DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nAD SOYAD: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}\nGCS: {gcs_skor}, Wells: {wells_score}\neGFR: {egfr} ml/dk\n\nBELİRTİLER:\n{', '.join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f'- {x['ad']} (%{x['puan']})' for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"
-        st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000; font-size:14px; white-space: pre-wrap;'>{epi}</pre>", unsafe_allow_html=True)
-        st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V30.txt")
+            st.divider()
+            epi = f"""DAHİLİYE KLİNİK KARAR ROBOTU\n---------------------------\nAD SOYAD: {p_no}\nHASTA CİNSİYETİ: {cinsiyet}\nTARİH: {datetime.now().strftime('%d/%m/%Y %H:%M')}\nLAB: Hb {hb}, WBC {wbc}, PLT {plt}, Kre {kre}\nGCS: {gcs_skor}, Wells: {wells_score}\neGFR: {egfr} ml/dk\n\nBELİRTİLER:\n{", ".join(b)}\n\nÖN TANI LİSTESİ:\n{chr(10).join([f"- {x['ad']} (%{x['puan']})" for x in results[:15]])}\n\nGELİŞTİRİCİ: İSMAİL ORHAN\n---------------------------"""
+            st.markdown(f"<pre style='background:white; padding:40px; border-radius:45px; border:10px solid #DC2626; color:#000; font-size:14px; white-space: pre-wrap;'>{epi}</pre>", unsafe_allow_html=True)
+            st.download_button("📥 Epikrizi İndir", epi, file_name=f"{p_no}_V30.txt")
 
 st.markdown("---")
 st.caption("GELİŞTİRİCİ: İSMAİL ORHAN GEMLİK 2026")
