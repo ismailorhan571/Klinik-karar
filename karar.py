@@ -387,7 +387,7 @@ Lütfen bu verileri uzman bir dahiliyeci gözüyle analiz et.
 
                         ai_res = model.generate_content(
                             contents,
-                            generation_config=genai.GenerationConfig(max_output_tokens=700, temperature=0.3)
+                            generation_config=genai.GenerationConfig(max_output_tokens=1200, temperature=0.25)
                         )
                         st.session_state.ai_klinik_yorum = ai_res.text
                 except Exception as e:
